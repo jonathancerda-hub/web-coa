@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Añadir Producto{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Añadir Nueva Presentación de Producto</h2>
+
+    <div class="card shadow-sm" style="max-width: 600px;">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('nuevo_producto') }}">
+                
+                <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre del Producto</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    <div class="form-text">Ej: Amoxicilina 500mg</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="forma" class="form-label">Forma Farmacéutica</label>
+                    <input type="text" class="form-control" id="forma" name="forma" required>
+                    <div class="form-text">Ej: Polvo Soluble, Solución Inyectable</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="presentacion" class="form-label">Presentación</label>
+                    <input type="text" class="form-control" id="presentacion" name="presentacion" required>
+                     <div class="form-text">Ej: Caja de 100 sobres, Frasco 250mL</div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <a href="{{ url_for('gestion_productos') }}" class="btn btn-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Añadir Producto</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

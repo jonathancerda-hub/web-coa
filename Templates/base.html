@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF--8">
+    <title>{% block title %}Sistema de Calidad{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        body {
+            display: flex;
+            background-color: #f8f9fa;
+        }
+        /* BARRA LATERAL */
+        .sidebar {
+            width: 260px;
+            background-color: #212529;
+            transition: width 0.3s ease;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+        .sidebar.collapsed {
+            width: 75px;
+        }
+        /* Encabezado de la barra lateral (Logo + Botón) */
+        .sidebar-header {
+            padding: 0.85rem 1.5rem;
+        }
+        .sidebar-header .logo-icon {
+            font-size: 1.8rem;
+            margin-right: 1rem;
+        }
+        .sidebar-header .logo-text {
+            font-size: 1.5rem;
+            white-space: nowrap;
+        }
+        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed #sidebarToggle {
+            display: none;
+        }
+        
+        /* ENLACES */
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            color: #adb5bd;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            position: relative;
+        }
+        .sidebar-nav-link:hover {
+            background-color: #343a40;
+            color: #fff;
+        }
+        .sidebar-nav-link .icon {
+            font-size: 1.5rem;
+            width: 25px;
+            text-align: center;
+            margin-right: 1rem;
+        }
+        .sidebar-nav-link .menu-text {
+            white-space: nowrap;
+            opacity: 1;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        /* LÓGICA DE COLAPSAR */
+        .sidebar.collapsed .menu-text,
+        .sidebar.collapsed .user-dropdown-text {
+            opacity: 0;
+            visibility: hidden;
+            width: 0;
+        }
+        
+        /* TOOLTIP 100% CSS */
+        .sidebar.collapsed .sidebar-nav-link .menu-text {
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 10px;
+            padding: 0.4rem 0.8rem;
+            background-color: #343a40;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        .sidebar.collapsed .sidebar-nav-link:hover .menu-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* CONTENIDO PRINCIPAL */
+        .main-content {
+            flex-grow: 1;
+            padding: 1.5rem;
+            height: 100vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar d-flex flex-column flex-shrink-0" id="sidebar">
+    <div class="sidebar-header d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('registros') }}" class="d-flex align-items-center text-white text-decoration-none">
+            <i class="bi bi-box-seam logo-icon"></i>
+            <span class="logo-text">Pharmadix</span>
+        </a>
+        <button class="btn btn-outline-secondary border-0 text-white-50" id="sidebarToggle" type="button">
+            <i class="bi bi-list"></i>
+        </button>
+    </div>
+    <hr class="text-secondary mt-0">
+    <ul class="nav nav-pills flex-column mb-auto px-2">
+        <li class="nav-item">
+            <a href="{{ url_for('registros') }}" class="sidebar-nav-link">
+                <i class="bi bi-list-task icon"></i><span class="menu-text">Registros</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('nuevo_registro') }}" class="sidebar-nav-link">
+                <i class="bi bi-file-earmark-plus icon"></i><span class="menu-text">Nuevo Registro</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('dashboard') }}" class="sidebar-nav-link">
+                <i class="bi bi-grid-1x2 icon"></i><span class="menu-text">Dashboard</span>
+            </a>
+        </li>
+        
+        {% if session.get('role') in ['Administrador', 'Supervisor'] %}
+        <li>
+            {# --- ENLACE MODIFICADO --- #}
+            <a href="{{ url_for('gestion_productos') }}" class="sidebar-nav-link">
+                <i class="bi bi-box icon"></i><span class="menu-text">Gestión Productos</span>
+            </a>
+        </li>
+        {% endif %}
+
+        {% if session.get('role') == 'Administrador' %}
+        <li>
+            {# --- ENLACE MODIFICADO --- #}
+            <a href="{{ url_for('gestion_usuarios') }}" class="sidebar-nav-link">
+                <i class="bi bi-people icon"></i><span class="menu-text">Gestión Usuarios</span>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+    <hr class="text-secondary">
+    <div class="dropdown p-3">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle icon"></i>
+            <strong class="menu-text user-dropdown-text">{{ session.get('username') }}</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+        </ul>
+    </div>
+</div>
+
+<main class="main-content">
+    {% block content %}
+    {% endblock %}
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const toggleButton = document.getElementById('sidebarToggle');
+
+    // Inicia colapsada
+    sidebar.classList.add('collapsed');
+
+    // Mostrar barra al pasar el mouse
+    sidebar.addEventListener('mouseenter', () => {
+        sidebar.classList.remove('collapsed');
+    });
+
+    // Ocultar barra al salir el mouse
+    sidebar.addEventListener('mouseleave', () => {
+        sidebar.classList.add('collapsed');
+    });
+
+    // Botón opcional para colapsar/expandir manually
+    if (toggleButton) {
+        toggleButton.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+    }
+</script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Productos{% endblock %}
+
+{% block content %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Gestión de Productos</h1>
+        <a href="{{ url_for('nuevo_producto') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Añadir Nueva Presentación
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Forma Farmacéutica</th>
+                            <th>Presentación</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in productos %}
+                        <tr>
+                            <td>{{ p.PRODUCTO }}</td>
+                            <td>{{ p.FORMA_FARMACEUTICA }}</td>
+                            <td>{{ p.PRESENTACION }}</td>
+                            <td class="text-center">
+                                <form action="{{ url_for('eliminar_presentacion', product_name=p.PRODUCTO | urlencode, presentation=p.PRESENTACION | urlencode) }}" method="POST" style="display: inline-block;">
+                                    <button type="submit" class="btn btn-danger btn-sm" 
+                                            onclick="return confirm('¿Estás seguro de que quieres eliminar esta presentación?');">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center">No hay productos registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

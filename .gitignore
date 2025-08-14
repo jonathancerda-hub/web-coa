@@ -1,0 +1,20 @@
+# Ignorar la carpeta del entorno virtual
+venv/
+env/
+*.env
+
+# Ignorar credenciales y secretos
+json/credentials.json
+*.json
+
+# Ignorar archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Ignorar bases de datos locales (si las usas para pruebas)
+*.sqlite3
+*.db
+
+# Ignorar archivos del sistema operativo
+.DS_Store
+Thumbs.db

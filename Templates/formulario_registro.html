@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit_mode %}Editar Certificado{% else %}Nuevo Certificado{% endif %}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+{% set is_finalized = is_edit_mode and record_data.get('CONCLUSION') in ['APROBADO', 'RECHAZADO'] %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>
+        {% if is_edit_mode %}
+            Editar Certificado (Código: {{ record_data.get('CODIGO') }})
+        {% else %}
+            Nuevo Certificado de Análisis (Código: {{ next_code }})
+        {% endif %}
+    </h2>
+    <a href="{{ url_for('registros') }}" class="btn btn-secondary">Volver a la Lista</a>
+</div>
+
+<form method="POST" id="mainForm" novalidate action="{% if is_edit_mode %}{{ url_for('editar_registro', codigo=record_data.get('CODIGO')) }}{% else %}{{ url_for('nuevo_registro') }}{% endif %}">
+    <fieldset {% if is_finalized %}disabled{% endif %}>
+        
+        <div class="card mb-4">
+            <div class="card-header"><h5>Datos del Producto</h5></div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="PRODUCTO" class="form-label">Producto</label>
+                        <select class="form-select" id="PRODUCTO" name="PRODUCTO" required>
+                            <option value="" disabled {% if not record_data.get('PRODUCTO') %}selected{% endif %}>Seleccione un producto...</option>
+                            {% for product in product_list %}
+                            <option value="{{ product }}" {% if product == record_data.get('PRODUCTO') %}selected{% endif %}>{{ product }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="PRESENTACION" class="form-label">Presentación</label>
+                        <select class="form-select" id="PRESENTACION" name="PRESENTACION" required></select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="FORMA_FARMACEUTICA" class="form-label">Forma Farmacéutica</label>
+                        <input type="text" class="form-control" id="FORMA_FARMACEUTICA" name="FORMA_FARMACEUTICA" value="{{ record_data.get('FORMA_FARMACEUTICA', '') }}" readonly required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="LOTE" class="form-label">Lote</label>
+                        <input type="text" class="form-control" id="LOTE" name="LOTE" value="{{ record_data.get('LOTE', '') }}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="VERSION_ESPECIFICACION" class="form-label">Versión de Especificación</label>
+                        <select class="form-select" id="VERSION_ESPECIFICACION" name="VERSION_ESPECIFICACION" required disabled></select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="CANTIDAD" class="form-label">Cantidad</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control" id="CANTIDAD" name="CANTIDAD" value="{{ record_data.get('CANTIDAD', '').split(' ')[0] }}" required>
+                            <select class="form-select" name="UNIDAD_CANTIDAD" style="max-width: 80px;">
+                                <option {% if 'KG' in record_data.get('CANTIDAD', 'KG') %}selected{% endif %}>KG</option>
+                                <option {% if 'L' in record_data.get('CANTIDAD', 'L') %}selected{% endif %}>L</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h5>Fechas y Referencia</h5></div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label>Fecha de Producción</label>
+                        <input type="text" class="form-control datepicker" name="FECHA_PRODUCCION" value="{{ record_data.get('FECHA_PRODUCCION', '') }}" required placeholder="dd-mm-yyyy">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Fecha de Vencimiento</label>
+                        <input type="text" class="form-control datepicker" name="FECHA_VENCIMIENTO" value="{{ record_data.get('FECHA_VENCIMIENTO', '') }}" required placeholder="dd-mm-yyyy">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Fecha de Análisis</label>
+                        <input type="text" class="form-control datepicker" name="FECHA_ANALISIS" value="{{ record_data.get('FECHA_ANALISIS', '') }}" required placeholder="dd-mm-yyyy">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Fecha de Emisión</label>
+                        <input type="text" class="form-control datepicker" name="FECHA_EMISION" value="{{ record_data.get('FECHA_EMISION', '') }}" required placeholder="dd-mm-yyyy">
+                    </div>
+                </div>
+                 <div class="row">
+                    <div class="col-md-6 mb-3"><label>Laboratorio</label><input type="text" class="form-control" name="LABORATORIO" value="{{ record_data.get('LABORATORIO', 'Agrovet Market') }}" required></div>
+                    <div class="col-md-6 mb-3"><label>Referencia (Opcional)</label><input type="text" class="form-control" name="REFERENCIA" value="{{ record_data.get('REFERENCIA', '') }}"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h5>Tabla de Análisis</h5></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead><tr><th>Ensayo</th><th>Especificaciones</th><th>Resultados</th></tr></thead>
+                        <tbody>
+                            {% for i in range(1, 21) %}
+                            <tr>
+                                <td><input type="text" class="form-control" name="ENSAYO{{i}}" value="{{ record_data.get('ENSAYO' ~ i, '') }}"></td>
+                                <td><input type="text" class="form-control" name="ESPECIFICACION{{i}}" value="{{ record_data.get('ESPECIFICACION' ~ i, '') }}"></td>
+                                <td>
+                                    {% if is_edit_mode and session.get('role') in ['Administrador', 'Supervisor'] %}
+                                        <input type="text" class="form-control" name="RESULTADO{{i}}" value="{{ record_data.get('RESULTADO' ~ i, '') }}">
+                                    {% else %}
+                                        <input type="text" class="form-control" name="RESULTADO{{i}}" value="{{ record_data.get('RESULTADO' ~ i, '') }}" readonly>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header"><h5>Conclusión</h5></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="OBSERVACIONES" class="form-label">Observaciones (Opcional)</label>
+                    <input type="text" class="form-control" id="OBSERVACIONES" name="OBSERVACIONES" value="{{ record_data.get('OBSERVACIONES', '') }}">
+                </div>
+                <div class="mb-3">
+                    <label for="CONCLUSION" class="form-label">Conclusión</label>
+                    {% if session.get('role') in ['Administrador', 'Supervisor'] %}
+                        <select class="form-select" id="CONCLUSION" name="CONCLUSION">
+                            <option {% if 'PENDIENTE' == record_data.get('CONCLUSION', 'PENDIENTE') %}selected{% endif %}>PENDIENTE</option>
+                            <option {% if 'APROBADO' == record_data.get('CONCLUSION') %}selected{% endif %}>APROBADO</option>
+                            <option {% if 'RECHAZADO' == record_data.get('CONCLUSION') %}selected{% endif %}>RECHAZADO</option>
+                        </select>
+                    {% else %}
+                        <input type="text" class="form-control" value="{{ record_data.get('CONCLUSION', 'PENDIENTE') }}" readonly>
+                        <input type="hidden" name="CONCLUSION" value="{{ record_data.get('CONCLUSION', 'PENDIENTE') }}">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+    {% if not is_finalized %}
+        <button type="submit" class="btn btn-primary w-100 mb-5">Guardar Cambios</button>
+    {% endif %}
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+
+<script>
+    const productData = {{ product_data_json|safe }};
+    const specsData = {{ specs_data_json|safe }};
+    const isEditMode = {{ is_edit_mode|tojson|safe }};
+    const recordData = {{ record_data|tojson|default('{}')|safe }};
+
+    const productoSelect = document.getElementById('PRODUCTO');
+    const presentacionSelect = document.getElementById('PRESENTACION');
+    const formaInput = document.getElementById('FORMA_FARMACEUTICA');
+    const versionSelect = document.getElementById('VERSION_ESPECIFICACION');
+
+    function limpiarTablaAnalisis() {
+        for (let i = 1; i <= 20; i++) {
+            document.querySelector(`[name="ENSAYO${i}"]`).value = '';
+            document.querySelector(`[name="ESPECIFICACION${i}"]`).value = '';
+        }
+    }
+
+    function updateProductFields() {
+        const selectedProduct = productoSelect.value;
+        const data = productData[selectedProduct];
+        presentacionSelect.innerHTML = '';
+        versionSelect.innerHTML = '<option value="">Cargando...</option>';
+        versionSelect.disabled = true;
+
+        if (!isEditMode || (isEditMode && productoSelect.value !== recordData.PRODUCTO)) {
+             limpiarTablaAnalisis();
+        }
+        
+        if (data) {
+            data.presentaciones.forEach(function(p) {
+                const option = document.createElement('option');
+                option.value = p;
+                option.textContent = p;
+                if (isEditMode && p === recordData.PRESENTACION) {
+                    option.selected = true;
+                }
+                presentacionSelect.appendChild(option);
+            });
+            formaInput.value = data.forma;
+        }
+
+        if (specsData[selectedProduct]) {
+            versionSelect.innerHTML = '<option value="">Seleccione una versión...</option>';
+            const versiones = Object.keys(specsData[selectedProduct]);
+            versiones.forEach(function(v) {
+                const option = document.createElement('option');
+                option.value = v;
+                option.textContent = v;
+                
+                // --- LÍNEA CORREGIDA ---
+                // Comparamos ambos valores como texto para evitar errores de tipo (ej: 3 vs "3")
+                if (isEditMode && String(v) === String(recordData.VERSION_ESPECIFICACION)) {
+                    option.selected = true;
+                }
+                versionSelect.appendChild(option);
+            });
+            versionSelect.disabled = false;
+        } else {
+            versionSelect.innerHTML = '<option value="">Sin especificaciones</option>';
+        }
+    }
+
+    function fillAnalysisTable() {
+        const selectedProduct = productoSelect.value;
+        const selectedVersion = versionSelect.value;
+        if (!isEditMode) {
+            limpiarTablaAnalisis();
+        }
+        if (selectedProduct && selectedVersion && specsData[selectedProduct] && specsData[selectedProduct][selectedVersion]) {
+            const especificaciones = specsData[selectedProduct][selectedVersion];
+            especificaciones.forEach(function(spec, index) {
+                if (index < 20) {
+                    document.querySelector(`[name="ENSAYO${index + 1}"]`).value = spec.especificacion || '';
+                    document.querySelector(`[name="ESPECIFICACION${index + 1}"]`).value = spec.descripcion || '';
+                }
+            });
+        }
+    }
+
+    productoSelect.addEventListener('change', () => {
+        updateProductFields();
+        fillAnalysisTable();
+    });
+    versionSelect.addEventListener('change', fillAnalysisTable);
+
+    window.addEventListener('DOMContentLoaded', (event) => {
+        if (isEditMode) {
+            updateProductFields();
+        }
+    });
+
+    // Script de validación
+    document.getElementById('mainForm').addEventListener('submit', function(event) {
+        let isValid = true;
+        const requiredFields = this.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        requiredFields.forEach(field => {
+            if (field.disabled) { return; }
+            if (!field.value || field.value.trim() === '') {
+                isValid = false;
+                field.classList.add('is-invalid');
+            }
+        });
+        if (!isValid) {
+            event.preventDefault();
+            this.querySelector('.is-invalid').focus();
+        }
+    });
+    
+    // Script para activar los calendarios
+    flatpickr.localize(flatpickr.l10ns.es);
+    flatpickr(".datepicker", {
+        dateFormat: "d-m-Y"
+    });
+</script>
+{% endblock %}

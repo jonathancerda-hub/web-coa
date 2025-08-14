@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit_mode %}Editar Usuario{% else %}Añadir Nuevo Usuario{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">
+        {% if is_edit_mode %}
+            Editar Usuario: {{ user_data.USERNAME }}
+        {% else %}
+            Añadir Nuevo Usuario
+        {% endif %}
+    </h2>
+
+    <div class="card shadow-sm" style="max-width: 600px;">
+        <div class="card-body">
+            <form method="POST" action="">
+                
+                <div class="mb-3">
+                    <label for="username" class="form-label">Nombre de usuario</label>
+                    <input type="text" class="form-control" id="username" name="username" 
+                           value="{{ user_data.USERNAME if is_edit_mode else '' }}" 
+                           {% if is_edit_mode %}readonly{% endif %} required>
+                    {% if is_edit_mode %}
+                    <div class="form-text">El nombre de usuario no se puede cambiar.</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" name="password" 
+                           {% if not is_edit_mode %}required{% endif %}>
+                    {% if is_edit_mode %}
+                    <div class="form-text">Dejar en blanco para no cambiar la contraseña.</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="role" class="form-label">Rol</label>
+                    <select class="form-select" id="role" name="role" required>
+                        <option value="Operario" {% if is_edit_mode and user_data.ROL == 'Operario' %}selected{% endif %}>Operario</option>
+                        <option value="Supervisor" {% if is_edit_mode and user_data.ROL == 'Supervisor' %}selected{% endif %}>Supervisor</option>
+                        <option value="Administrador" {% if is_edit_mode and user_data.ROL == 'Administrador' %}selected{% endif %}>Administrador</option>
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <a href="{{ url_for('gestion_usuarios') }}" class="btn btn-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Dashboard de Calidad{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<h1 class="mb-4 fw-bold" style="color: #003366;">📊 Dashboard de Calidad</h1>
+
+<div class="card shadow-sm mb-4 border-0">
+    <div class="card-header text-white fw-bold" style="background-color: #003366;">
+        <i class="bi bi-funnel me-2"></i>Filtros
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('dashboard') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="producto" class="form-label">Producto</label>
+                <select id="producto" name="producto" class="form-select">
+                    {% for product in product_list %}
+                        <option value="{{ product }}" {% if product == current_filters.producto %}selected{% endif %}>{{ product }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="fecha_inicio" class="form-label">Fecha Desde</label>
+                <input type="text" class="form-control datepicker" id="fecha_inicio" name="fecha_inicio" value="{{ current_filters.fecha_inicio }}">
+            </div>
+            <div class="col-md-3">
+                <label for="fecha_fin" class="form-label">Fecha Hasta</label>
+                <input type="text" class="form-control datepicker" id="fecha_fin" name="fecha_fin" value="{{ current_filters.fecha_fin }}">
+            </div>
+            <div class="col-auto flex-grow-1">
+                <button type="submit" class="btn w-100" style="background-color: #003366; color: white;">
+                    <i class="bi bi-search me-1"></i>Aplicar
+                </button>
+            </div>
+            <div class="col-auto flex-grow-1">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-x-circle me-1"></i>Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if stats and stats.total > 0 %}
+<div class="row mb-4">
+    {% set cards = [
+        {'title': 'Total en Periodo', 'value': stats.total, 'color': '#003366', 'icon': 'bi-bar-chart-line-fill', 'link': url_for('registros')},
+        {'title': 'Aprobados', 'value': stats.aprobados, 'color': '#008080', 'icon': 'bi-check2-circle', 'link': url_for('registros', search='APROBADO')},
+        {'title': 'Rechazados', 'value': stats.rechazados, 'color': '#C0392B', 'icon': 'bi-x-octagon-fill', 'link': url_for('registros', search='RECHAZADO')},
+        {'title': 'Pendientes', 'value': stats.pendientes, 'color': '#F39C12', 'icon': 'bi-hourglass-split', 'link': url_for('registros', search='PENDIENTE')}
+    ] %}
+    {% for card in cards %}
+    <div class="col-xl-3 col-md-6 mb-4">
+        <a href="{{ card.link }}" class="text-decoration-none">
+            <div class="card shadow-sm h-100 border-start border-4" style="border-color: {{ card.color }} !important;">
+                <div class="card-body d-flex align-items-center">
+                    <div class="col">
+                        <div class="text-xs fw-bold text-uppercase mb-1" style="color: {{ card.color }};">{{ card.title }}</div>
+                        <div class="h5 mb-0 fw-bold text-dark">{{ card.value }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi {{ card.icon }} fs-2 text-black-50 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row">
+    <div class="col-lg-7 mb-4">
+        <div class="card shadow-sm h-100 border-0">
+            <div class="card-header bg-light fw-bold">Distribución de Conclusiones</div>
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <div style="position: relative; width:100%; max-height: 350px;">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow-sm h-100 border-0">
+            <div class="card-header bg-light fw-bold">Resumen Mensual ({{ target_year }})</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mes</th>
+                                <th class="text-center">Aprob.</th>
+                                <th class="text-center">Rechaz.</th>
+                                <th class="text-center">Pend.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month in monthly_summary %}
+                            <tr>
+                                <td>{{ month.mes }}</td>
+                                <td class="text-center fw-bold" style="color: #008080;">{{ month.aprobado }}</td>
+                                <td class="text-center fw-bold" style="color: #C0392B;">{{ month.rechazado }}</td>
+                                <td class="text-center fw-bold" style="color: #F39C12;">{{ month.pendiente }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info shadow-sm">No se encontraron registros que coincidan con los filtros seleccionados.</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
+<script>
+const canvasElement = document.getElementById('myChart');
+if (canvasElement) {
+    const ctx = canvasElement.getContext('2d');
+    const chartLabels = {{ chart_labels|tojson|safe }};
+    const chartData = {{ chart_data|tojson|safe }};
+    
+    // MEJORA: Nueva paleta de colores para el gráfico
+    const colorMap = {
+        'APROBADO': '#008080', // Verde azulado / Teal
+        'RECHAZADO': '#C0392B', // Rojo oscuro
+        'PENDIENTE': '#F39C12'  // Naranja/Amarillo
+    };
+    const backgroundColors = chartLabels.map(label => colorMap[label] || 'rgba(108, 117, 125, 0.8)');
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                data: chartData,
+                backgroundColor: backgroundColors,
+                borderColor: '#fff',
+                borderWidth: 2,
+                hoverOffset: 20
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Distribución de Conclusiones',
+                    font: { size: 18, weight: 'bold' },
+                    padding: { bottom: 15 }
+                },
+                legend: {
+                    display: true,
+                    position: 'left',
+                    align: 'center',
+                    labels: {
+                        boxWidth: 20,
+                        padding: 15,
+                        font: { size: 14 }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Lógica del calendario
+flatpickr.localize(flatpickr.l10ns.es);
+flatpickr(".datepicker", {
+    dateFormat: "d-m-Y",
+    locale: "es"
+});
+</script>
+{% endblock %}
