@@ -34,7 +34,7 @@ class GoogleSheetManager:
                 creds_info = json.loads(google_creds_json)
                 creds = Credentials.from_service_account_info(creds_info, scopes=scopes)
             else:
-                creds_path = resource_path('Json/credentials.json')
+                creds_path = resource_path('credentials.json')
                 creds = Credentials.from_service_account_file(creds_path, scopes=scopes)
             self.client = gspread.authorize(creds)
             self.spreadsheet = self.client.open('CertificadosDeAnalisis')
