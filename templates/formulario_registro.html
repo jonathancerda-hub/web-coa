@@ -260,11 +260,65 @@
                 field.classList.add('is-invalid');
             }
         });
+
+        // Validaciones de fechas mejoradas
+        const hoy = new Date();
+        hoy.setHours(0,0,0,0);
+        function parseFecha(str) {
+            if (!str) return null;
+            str = str.trim();
+            const match = str.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+            if (!match) return null;
+            const [_, d, m, y] = match;
+            return new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+        }
+        const fProd = this.querySelector('[name="FECHA_PRODUCCION"]').value;
+        const fVenc = this.querySelector('[name="FECHA_VENCIMIENTO"]').value;
+        const fAnal = this.querySelector('[name="FECHA_ANALISIS"]').value;
+        const fEmis = this.querySelector('[name="FECHA_EMISION"]').value;
+        // Solo aplicar validaciones estrictas de fechas si NO es modo edición
+        if (!isEditMode) {
+            // Fecha de Producción: debe ser hoy
+            if (fProd) {
+                const fechaProd = parseFecha(fProd);
+                if (!fechaProd || fechaProd.getTime() !== hoy.getTime()) {
+                    isValid = false;
+                    this.querySelector('[name="FECHA_PRODUCCION"]').classList.add('is-invalid');
+                }
+            }
+            // Fecha de Vencimiento: debe ser posterior a hoy
+            if (fVenc) {
+                const fechaVenc = parseFecha(fVenc);
+                if (!fechaVenc || fechaVenc.getTime() <= hoy.getTime()) {
+                    isValid = false;
+                    this.querySelector('[name="FECHA_VENCIMIENTO"]').classList.add('is-invalid');
+                }
+            }
+            // Fecha de Análisis: no puede ser anterior a hoy
+            if (fAnal) {
+                const fechaAnal = parseFecha(fAnal);
+                if (!fechaAnal || fechaAnal.getTime() < hoy.getTime()) {
+                    isValid = false;
+                    this.querySelector('[name="FECHA_ANALISIS"]').classList.add('is-invalid');
+                }
+            }
+            // Fecha de Emisión: no puede ser anterior a hoy
+            if (fEmis) {
+                const fechaEmis = parseFecha(fEmis);
+                if (!fechaEmis || fechaEmis.getTime() < hoy.getTime()) {
+                    isValid = false;
+                    this.querySelector('[name="FECHA_EMISION"]').classList.add('is-invalid');
+                }
+            }
+        }
         if (!isValid) {
             event.preventDefault();
-            this.querySelector('.is-invalid').focus();
+            const firstInvalid = this.querySelector('.is-invalid');
+            if (firstInvalid) {
+                firstInvalid.focus();
+            }
         }
-    });
+    }, true);
     
     // Script para activar los calendarios
     flatpickr.localize(flatpickr.l10ns.es);

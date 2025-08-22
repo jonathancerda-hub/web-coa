@@ -78,17 +78,15 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
         pdf.add_font('DejaVuSans', 'B', resource_path('fonts/DejaVuSansCondensed-Bold.ttf'))
         pdf.add_font('DejaVuSans', 'I', resource_path('fonts/DejaVuSansCondensed-Oblique.ttf'))
         pdf.add_page()
-        pdf.set_auto_page_break(auto=True, margin=25)
-        
+        pdf.set_auto_page_break(auto=True, margin=10)  # Reducir margen inferior
         # --- SECCIÓN 1: TÍTULO ---
         cert_title = f"CERTIFICADO DE ANÁLISIS N° {data.get('CODIGO', 'N/A')}"
         dept_text = 'DEPARTAMENTO DE CONTROL DE CALIDAD'
-        pdf.set_font("DejaVuSans", '', 10)
+        pdf.set_font("DejaVuSans", '', 8)  # Reducir tamaño de fuente general
         pdf.cell(0, 6, dept_text, 0, 1, 'C')
-        pdf.set_font("DejaVuSans", 'B', 12)
-        pdf.cell(0, 10, cert_title, 0, 1, 'C')
-        pdf.ln(5)
-
+        pdf.set_font("DejaVuSans", 'B', 10)  # Reducir tamaño de fuente del título
+        pdf.cell(0, 8, cert_title, 0, 1, 'C')
+        pdf.ln(3)
         # --- SECCIÓN 2: DATOS DEL PRODUCTO ---
         info_producto_base = {
             "PRODUCTO": str(data.get('PRODUCTO', '')), "PRESENTACIÓN": str(data.get('PRESENTACION', '')),
@@ -102,18 +100,19 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
             info_producto["LINEA"] = str(data.get('LABORATORIO', ''))
             info_producto["REFERENCIA"] = str(data.get('REFERENCIA', ''))
         for key, value in info_producto.items():
-            pdf.set_font("DejaVuSans", 'B', 10); pdf.cell(60, 6, key, 0, 0, 'L')
-            pdf.set_font("DejaVuSans", '', 10); pdf.cell(0, 6, f": {value}", 0, 1, 'L')
-        pdf.ln(7)
-
+            pdf.set_font("DejaVuSans", 'B', 8)
+            pdf.cell(60, 5, key, 0, 0, 'L')
+            pdf.set_font("DejaVuSans", '', 8)
+            pdf.cell(0, 5, f": {value}", 0, 1, 'L')
+        pdf.ln(4)
         # --- SECCIÓN 3: TABLA DE ANÁLISIS ---
         w_ensayo, w_especificaciones, w_resultados = 60, 80, 50
-        line_height = 6
-        pdf.set_font("DejaVuSans", 'B', 11)
-        pdf.cell(w_ensayo, 8, 'ENSAYOS', 1, 0, 'C')
-        pdf.cell(w_especificaciones, 8, 'ESPECIFICACIONES', 1, 0, 'C')
-        pdf.cell(w_resultados, 8, 'RESULTADOS', 1, 1, 'C')
-        pdf.set_font("DejaVuSans", '', 9)
+        line_height = 5  # Reducir altura de línea
+        pdf.set_font("DejaVuSans", 'B', 9)  # Reducir tamaño de fuente de encabezado de tabla
+        pdf.cell(w_ensayo, 6, 'ENSAYOS', 1, 0, 'C')
+        pdf.cell(w_especificaciones, 6, 'ESPECIFICACIONES', 1, 0, 'C')
+        pdf.cell(w_resultados, 6, 'RESULTADOS', 1, 1, 'C')
+        pdf.set_font("DejaVuSans", '', 7)  # Reducir tamaño de fuente de tabla
         table_data = []
         for i in range(1, 21):
             ensayo = str(data.get(f'ENSAYO{i}', ''))
@@ -130,35 +129,36 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
             especificacion_lines = pdf.multi_cell(w_especificaciones, line_height, especificacion, split_only=True)
             resultado_lines = pdf.multi_cell(w_resultados, line_height, resultado, split_only=True)
             row_height = max(len(ensayo_lines), len(especificacion_lines), len(resultado_lines)) * line_height
-            pdf.set_y(current_y); pdf.set_x(x_start_table)
+            pdf.set_y(current_y)
+            pdf.set_x(x_start_table)
             pdf.multi_cell(w_ensayo, line_height, ensayo, align='L', border=0)
-            pdf.set_y(current_y); pdf.set_x(x_start_table + w_ensayo)
+            pdf.set_y(current_y)
+            pdf.set_x(x_start_table + w_ensayo)
             pdf.multi_cell(w_especificaciones, line_height, especificacion, align='L', border=0)
-            pdf.set_y(current_y); pdf.set_x(x_start_table + w_ensayo + w_especificaciones)
+            pdf.set_y(current_y)
+            pdf.set_x(x_start_table + w_ensayo + w_especificaciones)
             pdf.multi_cell(w_resultados, line_height, resultado, align='C', border=0)
             current_y += row_height
-        
         total_table_height = current_y - y_start_table
         pdf.rect(x_start_table, y_start_table, w_ensayo + w_especificaciones + w_resultados, total_table_height)
         pdf.line(x_start_table + w_ensayo, y_start_table, x_start_table + w_ensayo, y_start_table + total_table_height)
         pdf.line(x_start_table + w_ensayo + w_especificaciones, y_start_table, x_start_table + w_ensayo + w_especificaciones, y_start_table + total_table_height)
         pdf.set_y(current_y)
-        pdf.ln(10)
-
+        pdf.ln(5)
         # --- SECCIÓN 4: CONCLUSIÓN Y OBSERVACIONES ---
         if pdf_class_name == "AgrovetPDF":
             referencia_completa = f"Referencia: {str(data.get('REFERENCIA', 'N/A'))}"
             pdf.set_font("DejaVuSans", '', 10)
             pdf.multi_cell(0, 6, referencia_completa, 0, 'L')
         else:
-            pdf.set_font("DejaVuSans", '', 10)
-            pdf.multi_cell(0, 6, "OBSERVACIONES: " + str(data.get('OBSERVACIONES', '')), 0, 'L')
-        pdf.ln(5)
-        pdf.set_font("DejaVuSans", 'B', 10); pdf.cell(30, 6, "CONCLUSIÓN:", 0, 0, 'L')
-        pdf.set_font("DejaVuSans", '', 10); pdf.cell(0, 6, str(data.get('CONCLUSION', '')), 0, 1, 'L')
-
+            pdf.set_font("DejaVuSans", '', 8)
+            pdf.multi_cell(0, 5, "OBSERVACIONES: " + str(data.get('OBSERVACIONES', '')), 0, 'L')
+        pdf.ln(3)
+        pdf.set_font("DejaVuSans", 'B', 8)
+        pdf.cell(30, 5, "CONCLUSIÓN:", 0, 0, 'L')
+        pdf.set_font("DejaVuSans", '', 8)
+        pdf.cell(0, 5, str(data.get('CONCLUSION', '')), 0, 1, 'L')
         return bytes(pdf.output())
-
     except Exception as e:
         print(f"Error detallado al crear el PDF: {e}")
         return None

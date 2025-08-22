@@ -1,0 +1,47 @@
+/* static/css/pdf_styles.css */
+
+/* Define el tamaño de la página y los márgenes */
+@page {
+    size: A4 portrait; /* Puedes usar 'letter', 'legal', o 'A3' si necesitas más espacio */
+    /* Reduce AÚN MÁS los márgenes para maximizar el área de contenido */
+    margin: 1cm;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    /* Reduce AÚN MÁS el tamaño de fuente base y el espaciado */
+    font-size: 9pt;
+    line-height: 1.1;
+    color: #333;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    /* Evita que haya un salto de página justo después de un título */
+    page-break-after: avoid;
+    /* Compacta los márgenes de los encabezados al mínimo */
+    margin-top: 10pt;
+    margin-bottom: 3pt;
+}
+
+p, ul, ol {
+    margin-top: 0;
+    margin-bottom: 4pt; /* Reduce el espacio entre párrafos */
+}
+
+table {
+    /* Asegura que la tabla ocupe todo el ancho y no se desborde */
+    width: 100%;
+    border-collapse: collapse;
+    /* Un tamaño de fuente muy pequeño para las tablas */
+    font-size: 7.5pt;
+    /* Esto intenta mantener la tabla completa en una página, si es posible */
+    page-break-inside: avoid;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 2px 4px; /* Reduce el padding vertical para compactar filas */
+    text-align: left;
+    /* Ayuda a romper palabras largas si es necesario para que no desborden la celda */
+    word-wrap: break-word;
+}
