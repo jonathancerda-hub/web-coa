@@ -1,20 +1,15 @@
-# Ignorar la carpeta del entorno virtual
+# Entorno virtual
 venv/
-env/
-*.env
 
-# Ignorar credenciales y secretos
-json/credentials.json
-*.json
+# Archivos de entorno con secretos
+.env
 
-# Ignorar archivos de caché de Python
+# Archivo de credenciales de Google (si se usa localmente)
+credentials.json
+
+# Caché de Python
 __pycache__/
 *.pyc
 
-# Ignorar bases de datos locales (si las usas para pruebas)
-*.sqlite3
-*.db
-
-# Ignorar archivos del sistema operativo
+# Archivos de sistema operativo
 .DS_Store
-Thumbs.db

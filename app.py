@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify
 from datetime import datetime, timedelta
 import pandas as pd
 import os
@@ -8,6 +8,7 @@ from flask_limiter.util import get_remote_address
 from functools import wraps
 from urllib.parse import quote_plus, unquote_plus
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # --- IMPORTACIÓN CORREGIDA ---
 # Se asegura de importar las funciones necesarias de los otros archivos.
@@ -78,9 +79,11 @@ def login():
         password = request.form.get('password')
         
         users = data_manager.get_all_users()
-        user_found = next((u for u in users if u.get('USERNAME') == username and str(u.get('PASSWORD')) == password), None)
+        # Se busca el usuario por nombre de usuario
+        user_found = next((u for u in users if u.get('USERNAME') == username), None)
 
-        if user_found:
+        # Se verifica el usuario y la contraseña hasheada
+        if user_found and check_password_hash(user_found.get('PASSWORD', ''), password):
             session.pop('login_failures', None)
             session.permanent = True
             session['username'] = user_found['USERNAME']
@@ -125,14 +128,51 @@ def registros():
         return "Error: No se pudo conectar con el gestor de datos.", 500
     
     search_term = request.args.get('search', '').lower()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+
     all_records = data_manager.get_all_records()
 
+    # --- INICIO DE LA MODIFICACIÓN ---
+    # 1. Ordenar los registros por fecha de creación, de más reciente a más antiguo
+    try:
+        all_records.sort(
+            key=lambda r: datetime.strptime(r.get('FECHA_DE_REGISTRO', '01-01-1900 00:00:00'), '%d-%m-%Y %H:%M:%S'),
+            reverse=True
+        )
+    except (ValueError, TypeError):
+        # Si hay un error en el formato de fecha, se mantiene el orden original.
+        flash('Advertencia: No se pudo ordenar por fecha debido a formatos inconsistentes.', 'warning')
+
+    # 2. Filtrar si hay un término de búsqueda
     if search_term:
         filtered_records = [rec for rec in all_records if any(search_term in str(val).lower() for val in rec.values())]
     else:
         filtered_records = all_records
 
-    return render_template('registros.html', records=filtered_records, search_term=search_term)
+    # 3. Aplicar paginación a los registros (ya filtrados si es el caso)
+    total_records = len(filtered_records)
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_records = filtered_records[start:end]
+    total_pages = (total_records + per_page - 1) // per_page
+    # --- FIN DE LA MODIFICACIÓN ---
+
+    # --- INICIO DE LA NUEVA LÓGICA ---
+    # Si la solicitud es AJAX (viene de nuestro script de búsqueda), devolvemos solo los datos necesarios en formato JSON.
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'table_html': render_template('_registros_table_rows.html', records=paginated_records),
+            'pagination_html': render_template('_pagination.html', current_page=page, total_pages=total_pages, search_term=search_term)
+        })
+    # --- FIN DE LA NUEVA LÓGICA ---
+
+    # Si es una carga de página normal, renderizamos la plantilla completa.
+    return render_template('registros.html', 
+                           records=paginated_records, 
+                           search_term=search_term, 
+                           current_page=page, 
+                           total_pages=total_pages)
 
 @app.route('/dashboard')
 def dashboard():
@@ -177,27 +217,52 @@ def dashboard():
         dashboard_stats['tasa_aprobacion'] = f"{tasa_aprobacion:.1f}%"
     else:
         dashboard_stats['tasa_aprobacion'] = "N/A"
-    df['FECHA_EMISION_DT'] = pd.to_datetime(df['FECHA_EMISION'], errors='coerce', dayfirst=True)
+    
+    # --- INICIO DE LA MODIFICACIÓN ---
+    # Se determina el año objetivo para el resumen mensual.
     target_year = datetime.now().year
     if fecha_inicio_str:
         try:
             target_year = pd.to_datetime(fecha_inicio_str, dayfirst=True).year
         except (ValueError, TypeError):
             pass
-    
-    df_para_resumen_anual = df[df['FECHA_EMISION_DT'].dt.year == target_year]
-    monthly_summary_raw = df_para_resumen_anual.groupby(df_para_resumen_anual['FECHA_EMISION_DT'].dt.month)['CONCLUSION'].value_counts().unstack(fill_value=0)
+    # Se usa FECHA_DE_REGISTRO_DT para el resumen anual, asegurando consistencia.
+    # AHORA SE USA EL DATAFRAME YA FILTRADO (df_filtrado_final) para el resumen.
+    df_para_resumen_anual = df_filtrado_final[df_filtrado_final['FECHA_DE_REGISTRO_DT'].dt.year == target_year]
+    monthly_summary_raw = df_para_resumen_anual.groupby(df_para_resumen_anual['FECHA_DE_REGISTRO_DT'].dt.month)['CONCLUSION'].value_counts().unstack(fill_value=0)
+    # --- FIN DE LA MODIFICACIÓN ---
     
     meses_es = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
     monthly_summary = []
     for i, mes in enumerate(meses_es):
         month_num = i + 1
+        
+        # --- INICIO DE LA CORRECCIÓN ---
+        # Calcular las fechas de inicio y fin para cada mes
+        start_date = datetime(target_year, month_num, 1)
+        if month_num == 12:
+            end_date = datetime(target_year, 12, 31)
+        else:
+            end_date = datetime(target_year, month_num + 1, 1) - timedelta(days=1)
+
+        month_data = {
+            'mes': mes, 'aprobado': 0, 'rechazado': 0, 'pendiente': 0,
+            'start_date_str': start_date.strftime('%d-%m-%Y'),
+            'end_date_str': end_date.strftime('%d-%m-%Y')
+        }
+        # --- FIN DE LA CORRECCIÓN ---
+
         if month_num in monthly_summary_raw.index:
             data = monthly_summary_raw.loc[month_num]
-            monthly_summary.append({'mes': mes, 'aprobado': data.get('APROBADO', 0), 'rechazado': data.get('RECHAZADO', 0), 'pendiente': data.get('PENDIENTE', 0)})
-        else:
-            monthly_summary.append({'mes': mes, 'aprobado': 0, 'rechazado': 0, 'pendiente': 0})
+            month_data.update({'aprobado': data.get('APROBADO', 0), 'rechazado': data.get('RECHAZADO', 0), 'pendiente': data.get('PENDIENTE', 0)})
+        monthly_summary.append(month_data)
     
+    # --- INICIO DE LA NUEVA MODIFICACIÓN: Datos para el gráfico de líneas ---
+    line_chart_labels = [m['mes'] for m in monthly_summary] # Esto ya es texto, está bien
+    line_chart_aprobados = [int(m['aprobado']) for m in monthly_summary] # Convertimos a int estándar
+    line_chart_rechazados = [int(m['rechazado']) for m in monthly_summary] # Convertimos a int estándar
+    # --- FIN DE LA NUEVA MODIFICACIÓN ---
+
     product_list = ["Todos los Productos"] + sorted(list(data_manager.product_data.keys()))
 
     return render_template(
@@ -205,6 +270,11 @@ def dashboard():
         stats=dashboard_stats,
         chart_labels=chart_labels,
         chart_data=chart_data,
+        # --- INICIO DE LA NUEVA MODIFICACIÓN ---
+        line_chart_labels=line_chart_labels,
+        line_chart_aprobados=line_chart_aprobados,
+        line_chart_rechazados=line_chart_rechazados,
+        # --- FIN DE LA NUEVA MODIFICACIÓN ---
         monthly_summary=monthly_summary,
         product_list=product_list,
         target_year=target_year,
@@ -232,7 +302,9 @@ def nuevo_usuario():
         if not all([username, password, role]):
             flash('Todos los campos son obligatorios.', 'warning')
             return redirect(url_for('nuevo_usuario'))
-        user_data = [username, password, role]
+        # Hashear la contraseña antes de guardarla
+        hashed_password = generate_password_hash(password)
+        user_data = [username, hashed_password, role]
         success, message = data_manager.add_user(user_data)
         if success:
             data_manager.log_action(session.get('username'), "Creó Usuario", f"Nuevo usuario: {username}")
@@ -255,7 +327,7 @@ def editar_usuario(username):
         new_role = request.form.get('role')
         data_to_update = {'ROL': new_role}
         if new_password:
-            data_to_update['PASSWORD'] = new_password
+            data_to_update['PASSWORD'] = generate_password_hash(new_password)
         success, message = data_manager.update_user(username, data_to_update)
         if success:
             data_manager.log_action(session.get('username'), "Editó Usuario", f"Usuario editado: {username}")
@@ -405,16 +477,28 @@ def editar_registro(codigo):
 
     if request.method == 'POST':
         try:
-            datos_formulario = {key: request.form.get(key, '') for key in get_column_order()}
+            # --- INICIO DE LA MODIFICACIÓN ---
+            # 1. Copiamos el registro original para preservar los datos que no se pueden editar.
+            datos_actualizados = record_to_edit.copy()
+
+            # 2. Actualizamos el diccionario solo con los datos que vienen del formulario.
+            # Los campos deshabilitados en el HTML no se enviarán, por lo que los valores originales se mantienen.
+            for key in request.form:
+                datos_actualizados[key] = request.form.get(key)
+
+            # 3. Re-formateamos las fechas y la cantidad, como antes.
             for key in ['FECHA_PRODUCCION', 'FECHA_VENCIMIENTO', 'FECHA_ANALISIS', 'FECHA_EMISION']:
-                datos_formulario[key] = format_date_for_sheet(request.form.get(key))
+                datos_actualizados[key] = format_date_for_sheet(request.form.get(key))
             
-            datos_formulario['CODIGO'] = record_to_edit.get('CODIGO')
-            datos_formulario['FECHA_DE_REGISTRO'] = record_to_edit.get('FECHA_DE_REGISTRO')
-            datos_formulario['CREADO_POR'] = record_to_edit.get('CREADO_POR')
-            datos_formulario['CANTIDAD'] = f"{request.form.get('CANTIDAD', '0')} {request.form.get('UNIDAD_CANTIDAD', 'KG')}"
+            # --- INICIO DE LA CORRECCIÓN ---
+            # Solo reconstruir la cantidad si los campos no están deshabilitados (es decir, si vienen en el form)
+            if 'CANTIDAD' in request.form and 'UNIDAD_CANTIDAD' in request.form:
+                datos_actualizados['CANTIDAD'] = f"{request.form.get('CANTIDAD')} {request.form.get('UNIDAD_CANTIDAD')}"
+            # --- FIN DE LA CORRECCIÓN ---
             
-            lista_ordenada = [datos_formulario.get(col, '') for col in get_column_order()]
+            # 4. Creamos la lista final en el orden correcto para la hoja de cálculo.
+            lista_ordenada = [datos_actualizados.get(col, '') for col in get_column_order()]
+            # --- FIN DE LA MODIFICACIÓN ---
             data_manager.update_record(original_index + 2, lista_ordenada)
             flash('¡Registro actualizado con éxito!', 'success')
             data_manager.log_action(session.get('username'), "Editó Certificado", f"Código: {codigo}")

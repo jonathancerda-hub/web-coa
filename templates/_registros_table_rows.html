@@ -1,0 +1,28 @@
+{% if records %}
+    {% for record in records %}
+    <tr>
+        <td><strong>{{ record.get('CODIGO', 'N/A') }}</strong></td>
+        <td>{{ record.get('PRODUCTO', 'N/A') }}</td>
+        <td>{{ record.get('LOTE', 'N/A') }}</td>
+        <td>
+            {% set conclusion = record.get('CONCLUSION', 'PENDIENTE') %}
+            {% set conclusion_class = 'bg-warning text-dark' %}
+            {% if conclusion == 'APROBADO' %}{% set conclusion_class = 'bg-success' %}{% endif %}
+            {% if conclusion == 'RECHAZADO' %}{% set conclusion_class = 'bg-danger' %}{% endif %}
+            <span class="badge {{ conclusion_class }}">{{ conclusion }}</span>
+        </td>
+        <td class="text-center">
+            {{ record.get('FECHA_DE_REGISTRO', '').split(' ')[0] }}
+        </td>
+        <td class="text-center">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('editar_registro', codigo=record.get('CODIGO')) }}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a>
+                <a href="{{ url_for('generate_pdf', codigo=record.get('CODIGO'), pdf_type='PDF') }}" class="btn btn-sm btn-outline-danger" title="PDF" target="_blank"><i class="bi bi-file-earmark-pdf"></i></a>
+                <a href="{{ url_for('generate_pdf', codigo=record.get('CODIGO'), pdf_type='AgrovetPDF') }}" class="btn btn-sm btn-outline-info" title="PDF Agrovet" target="_blank"><i class="bi bi-file-earmark-pdf-fill"></i></a>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+<tr><td colspan="6" class="text-center">No se encontraron registros que coincidan con la búsqueda.</td></tr>
+{% endif %}

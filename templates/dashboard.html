@@ -4,10 +4,10 @@
 {% block content %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-<h1 class="mb-4 fw-bold" style="color: #003366;">📊 Dashboard de Calidad</h1>
+<h1 class="mb-4 fw-bold" style="color: #343a40;"><i class="bi bi-grid-1x2-fill me-2"></i>Dashboard de Calidad</h1>
 
 <div class="card shadow-sm mb-4 border-0">
-    <div class="card-header text-white fw-bold" style="background-color: #003366;">
+    <div class="card-header text-white fw-bold" style="background-color: #343a40;">
         <i class="bi bi-funnel me-2"></i>Filtros
     </div>
     <div class="card-body">
@@ -21,15 +21,15 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label for="fecha_inicio" class="form-label">Fecha Desde</label>
+                <label for="fecha_inicio" class="form-label">Registro Desde</label>
                 <input type="text" class="form-control datepicker" id="fecha_inicio" name="fecha_inicio" value="{{ current_filters.fecha_inicio }}">
             </div>
             <div class="col-md-3">
-                <label for="fecha_fin" class="form-label">Fecha Hasta</label>
+                <label for="fecha_fin" class="form-label">Registro Hasta</label>
                 <input type="text" class="form-control datepicker" id="fecha_fin" name="fecha_fin" value="{{ current_filters.fecha_fin }}">
             </div>
             <div class="col-auto flex-grow-1">
-                <button type="submit" class="btn w-100" style="background-color: #003366; color: white;">
+                <button type="submit" class="btn btn-dark w-100">
                     <i class="bi bi-search me-1"></i>Aplicar
                 </button>
             </div>
@@ -45,7 +45,7 @@
 {% if stats and stats.total > 0 %}
 <div class="row mb-4">
     {% set cards = [
-        {'title': 'Total en Periodo', 'value': stats.total, 'color': '#003366', 'icon': 'bi-bar-chart-line-fill', 'link': url_for('registros')},
+        {'title': 'Total en Periodo', 'value': stats.total, 'color': '#343a40', 'icon': 'bi-bar-chart-line-fill', 'link': url_for('registros')},
         {'title': 'Aprobados', 'value': stats.aprobados, 'color': '#008080', 'icon': 'bi-check2-circle', 'link': url_for('registros', search='APROBADO')},
         {'title': 'Rechazados', 'value': stats.rechazados, 'color': '#C0392B', 'icon': 'bi-x-octagon-fill', 'link': url_for('registros', search='RECHAZADO')},
         {'title': 'Pendientes', 'value': stats.pendientes, 'color': '#F39C12', 'icon': 'bi-hourglass-split', 'link': url_for('registros', search='PENDIENTE')}
@@ -97,7 +97,13 @@
                         </thead>
                         <tbody>
                             {% for month in monthly_summary %}
-                            <tr>
+                            
+                            <tr class="clickable-row" 
+                                data-href="{{ url_for('dashboard', 
+                                    producto=current_filters.producto, 
+                                    fecha_inicio=month.start_date_str, 
+                                    fecha_fin=month.end_date_str) }}"
+                                title="Haz clic para ver los registros de {{ month.mes }}">
                                 <td>{{ month.mes }}</td>
                                 <td class="text-center fw-bold" style="color: #008080;">{{ month.aprobado }}</td>
                                 <td class="text-center fw-bold" style="color: #C0392B;">{{ month.rechazado }}</td>
@@ -110,7 +116,28 @@
             </div>
         </div>
     </div>
+    <style>
+        .clickable-row {
+            cursor: pointer;
+        }
+        .clickable-row:hover {
+            background-color: #f8f9fa; /* Un color sutil para el hover */
+        }
+    </style>
 </div>
+
+<!-- INICIO DE LA NUEVA MODIFICACIÓN: Gráfico de Líneas -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow-sm h-100 border-0">
+            <div class="card-header bg-light fw-bold">Tendencia Anual de Aprobados vs. Rechazados ({{ target_year }})</div>
+            <div class="card-body">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- FIN DE LA NUEVA MODIFICACIÓN -->
 {% else %}
 <div class="alert alert-info shadow-sm">No se encontraron registros que coincidan con los filtros seleccionados.</div>
 {% endif %}
@@ -124,7 +151,7 @@
 <script>
 const canvasElement = document.getElementById('myChart');
 if (canvasElement) {
-    const ctx = canvasElement.getContext('2d');
+    const pieCtx = canvasElement.getContext('2d');
     const chartLabels = {{ chart_labels|tojson|safe }};
     const chartData = {{ chart_data|tojson|safe }};
     
@@ -136,7 +163,7 @@ if (canvasElement) {
     };
     const backgroundColors = chartLabels.map(label => colorMap[label] || 'rgba(108, 117, 125, 0.8)');
 
-    new Chart(ctx, {
+    new Chart(pieCtx, {
         type: 'pie',
         data: {
             labels: chartLabels,
@@ -173,11 +200,66 @@ if (canvasElement) {
     });
 }
 
+// --- INICIO DE LA NUEVA MODIFICACIÓN: Lógica para el gráfico de líneas ---
+const lineCanvasElement = document.getElementById('lineChart');
+if (lineCanvasElement) {
+    const lineCtx = lineCanvasElement.getContext('2d');
+    new Chart(lineCtx, {
+        type: 'line',
+        data: {
+            labels: {{ line_chart_labels|tojson|safe }},
+            datasets: [
+                {
+                    label: 'Aprobados',
+                    data: {{ line_chart_aprobados|tojson|safe }},
+                    borderColor: '#008080',
+                    backgroundColor: 'rgba(0, 128, 128, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'Rechazados',
+                    data: {{ line_chart_rechazados|tojson|safe }},
+                    borderColor: '#C0392B',
+                    backgroundColor: 'rgba(192, 57, 43, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        // Asegura que en el eje Y solo haya números enteros
+                        stepSize: 1,
+                        callback: function(value) {if (value % 1 === 0) {return value;}}
+                    }
+                }
+            },
+            plugins: {
+                legend: { position: 'top' }
+            }
+        }
+    });
+}
+// --- FIN DE LA NUEVA MODIFICACIÓN ---
+
 // Lógica del calendario
 flatpickr.localize(flatpickr.l10ns.es);
 flatpickr(".datepicker", {
     dateFormat: "d-m-Y",
     locale: "es"
+});
+
+// Lógica para filas de tabla clickeables
+document.querySelectorAll('.clickable-row').forEach(row => {
+    row.addEventListener('click', () => {
+        window.location.href = row.dataset.href;
+    });
 });
 </script>
 {% endblock %}

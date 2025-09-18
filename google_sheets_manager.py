@@ -129,8 +129,18 @@ class GoogleSheetManager:
             raise
 
     def get_all_products_flat(self):
-        product_sheet = self.spreadsheet.worksheet("Productos")
-        return product_sheet.get_all_records()
+        # --- INICIO DE LA MODIFICACIÓN: Optimización de carga ---
+        # En lugar de hacer una nueva llamada a la API, transformamos los datos cacheados.
+        # Esto hace que la carga de la página sea instantánea.
+        flat_list = []
+        for product_name, data in self.product_data.items():
+            for presentation in data.get('presentaciones', []):
+                flat_list.append({
+                    'PRODUCTO': product_name,
+                    'PRESENTACION': presentation,
+                    'FORMA_FARMACEUTICA': data.get('forma', '')
+                })
+        return flat_list
 
     def add_product_presentation(self, product_data):
         try:

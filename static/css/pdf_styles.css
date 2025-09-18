@@ -45,3 +45,9 @@ th, td {
     /* Ayuda a romper palabras largas si es necesario para que no desborden la celda */
     word-wrap: break-word;
 }
+
+th {
+    background-color: #f2f2f2; /* Un gris muy claro para el fondo del encabezado */
+    font-weight: bold;
+    color: #333;
+}

@@ -7,14 +7,14 @@
 
 {% set is_finalized = is_edit_mode and record_data.get('CONCLUSION') in ['APROBADO', 'RECHAZADO'] %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0 fw-bold" style="color: #343a40;">
         {% if is_edit_mode %}
-            Editar Certificado (Código: {{ record_data.get('CODIGO') }})
+            <i class="bi bi-pencil-square me-2"></i>Editar Certificado (Código: {{ record_data.get('CODIGO') }})
         {% else %}
-            Nuevo Certificado de Análisis (Código: {{ next_code }})
+            <i class="bi bi-file-earmark-plus-fill me-2"></i>Nuevo Certificado de Análisis (Código: {{ next_code }})
         {% endif %}
-    </h2>
+    </h1>
     <a href="{{ url_for('registros') }}" class="btn btn-secondary">Volver a la Lista</a>
 </div>
 
@@ -27,7 +27,7 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="PRODUCTO" class="form-label">Producto</label>
-                        <select class="form-select" id="PRODUCTO" name="PRODUCTO" required>
+                        <select class="form-select" id="PRODUCTO" name="PRODUCTO" required {% if is_edit_mode %}disabled{% endif %}>
                             <option value="" disabled {% if not record_data.get('PRODUCTO') %}selected{% endif %}>Seleccione un producto...</option>
                             {% for product in product_list %}
                             <option value="{{ product }}" {% if product == record_data.get('PRODUCTO') %}selected{% endif %}>{{ product }}</option>
@@ -36,17 +36,17 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="PRESENTACION" class="form-label">Presentación</label>
-                        <select class="form-select" id="PRESENTACION" name="PRESENTACION" required></select>
+                        <select class="form-select" id="PRESENTACION" name="PRESENTACION" required {% if is_edit_mode %}disabled{% endif %}></select>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="FORMA_FARMACEUTICA" class="form-label">Forma Farmacéutica</label>
-                        <input type="text" class="form-control" id="FORMA_FARMACEUTICA" name="FORMA_FARMACEUTICA" value="{{ record_data.get('FORMA_FARMACEUTICA', '') }}" readonly required>
+                        <input type="text" class="form-control" id="FORMA_FARMACEUTICA" name="FORMA_FARMACEUTICA" value="{{ record_data.get('FORMA_FARMACEUTICA', '') }}" readonly required {% if is_edit_mode %}disabled{% endif %}>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="LOTE" class="form-label">Lote</label>
-                        <input type="text" class="form-control" id="LOTE" name="LOTE" value="{{ record_data.get('LOTE', '') }}" required>
+                        <input type="text" class="form-control" id="LOTE" name="LOTE" value="{{ record_data.get('LOTE', '') }}" required {% if is_edit_mode %}disabled{% endif %}>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="VERSION_ESPECIFICACION" class="form-label">Versión de Especificación</label>
@@ -55,8 +55,8 @@
                     <div class="col-md-4 mb-3">
                         <label for="CANTIDAD" class="form-label">Cantidad</label>
                         <div class="input-group">
-                            <input type="number" step="0.01" class="form-control" id="CANTIDAD" name="CANTIDAD" value="{{ record_data.get('CANTIDAD', '').split(' ')[0] }}" required>
-                            <select class="form-select" name="UNIDAD_CANTIDAD" style="max-width: 80px;">
+                            <input type="number" step="0.01" class="form-control" id="CANTIDAD" name="CANTIDAD" value="{{ record_data.get('CANTIDAD', '').split(' ')[0] }}" required {% if is_edit_mode %}disabled{% endif %}>
+                            <select class="form-select" name="UNIDAD_CANTIDAD" style="max-width: 80px;" {% if is_edit_mode %}disabled{% endif %}>
                                 <option {% if 'KG' in record_data.get('CANTIDAD', 'KG') %}selected{% endif %}>KG</option>
                                 <option {% if 'L' in record_data.get('CANTIDAD', 'L') %}selected{% endif %}>L</option>
                             </select>
@@ -125,7 +125,7 @@
             <div class="card-body">
                 <div class="mb-3">
                     <label for="OBSERVACIONES" class="form-label">Observaciones (Opcional)</label>
-                    <input type="text" class="form-control" id="OBSERVACIONES" name="OBSERVACIONES" value="{{ record_data.get('OBSERVACIONES', '') }}">
+                    <textarea class="form-control" id="OBSERVACIONES" name="OBSERVACIONES" rows="3" placeholder="- Observación 1&#10;- Observación 2">{{ record_data.get('OBSERVACIONES', '') }}</textarea>
                 </div>
                 <div class="mb-3">
                     <label for="CONCLUSION" class="form-label">Conclusión</label>
@@ -211,7 +211,12 @@
                 }
                 versionSelect.appendChild(option);
             });
-            versionSelect.disabled = false;
+            // --- INICIO DE LA CORRECCIÓN ---
+            // Solo habilitar el selector si NO estamos en modo de edición.
+            if (!isEditMode) {
+                versionSelect.disabled = false;
+            }
+            // --- FIN DE LA CORRECCIÓN ---
         } else {
             versionSelect.innerHTML = '<option value="">Sin especificaciones</option>';
         }
