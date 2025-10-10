@@ -354,9 +354,38 @@ def eliminar_usuario(username):
 @app.route('/gestion-productos')
 @supervisor_required
 def gestion_productos():
+    search_term = request.args.get('search', '').lower()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+
     try:
         productos = data_manager.get_all_products_flat()
-        return render_template('gestion_productos.html', productos=productos)
+
+        if search_term:
+            filtered_productos = [
+                p for p in productos if
+                search_term in p.get('PRODUCTO', '').lower() or
+                search_term in p.get('FORMA_FARMACEUTICA', '').lower() or
+                search_term in p.get('PRESENTACION', '').lower()
+            ]
+        else:
+            filtered_productos = productos
+
+        total_records = len(filtered_productos)
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_records = filtered_productos[start:end]
+        total_pages = (total_records + per_page - 1) // per_page
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'table_html': render_template('_productos_table_rows.html', productos=paginated_records),
+                'pagination_html': render_template('_pagination.html', current_page=page, total_pages=total_pages, search_term=search_term, endpoint='gestion_productos')
+            })
+
+        return render_template('gestion_productos.html', 
+                               productos=paginated_records, search_term=search_term, 
+                               current_page=page, total_pages=total_pages, endpoint='gestion_productos')
     except Exception as e:
         flash(f"Error al cargar la gestión de productos: {e}", "danger")
         return redirect(url_for('registros'))
@@ -513,6 +542,31 @@ def editar_registro(codigo):
             product_data_json=json.dumps(data_manager.product_data),
             specs_data_json=json.dumps(data_manager.specs_data)
         )
+
+@app.cli.command("migrate-passwords")
+def migrate_passwords_command():
+    """Hashea todas las contraseñas en texto plano en la hoja de Usuarios."""
+    print("Iniciando migración de contraseñas...")
+    if not data_manager:
+        print("Error: No se pudo inicializar el gestor de datos.")
+        return
+
+    try:
+        users = data_manager.get_all_users()
+        migrated_count = 0
+        for user in users:
+            username = user.get('USERNAME')
+            password = str(user.get('PASSWORD', ''))
+            
+            # Si la contraseña no parece un hash de Werkzeug, la migramos.
+            if not password.startswith('pbkdf2:sha256:'):
+                print(f"Migrando contraseña para el usuario: {username}...")
+                hashed_password = generate_password_hash(password)
+                data_manager.update_user(username, {'PASSWORD': hashed_password})
+                migrated_count += 1
+        print(f"¡Migración completada! Se actualizaron {migrated_count} contraseñas.")
+    except Exception as e:
+        print(f"Ocurrió un error durante la migración: {e}")
 
 if __name__ == '__main__':
     app.run(debug=True)

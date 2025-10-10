@@ -5,6 +5,46 @@
 {% block content %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
+<style>
+    .form-control.is-valid {
+        border-color: #198754;
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='m2.3 6.73.94-.94 1.97 1.97 3.36-3.36.94.94L4.2 9.67z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 2.4 2.4m0-2.4L5.8 7'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .invalid-feedback {
+        display: block;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+
+    /* Ocultar los botones de subir/bajar para input type="number" */
+    /* Para Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    /* Para Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+</style>
+
 {% set is_finalized = is_edit_mode and record_data.get('CONCLUSION') in ['APROBADO', 'RECHAZADO'] %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -46,7 +86,11 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="LOTE" class="form-label">Lote</label>
-                        <input type="text" class="form-control" id="LOTE" name="LOTE" value="{{ record_data.get('LOTE', '') }}" required {% if is_edit_mode %}disabled{% endif %}>
+                        <input type="text" inputmode="numeric" class="form-control" id="LOTE" name="LOTE"
+                               pattern="\d{1,12}"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12);"
+                               title="Solo se permiten números enteros positivos, máximo 12 dígitos."
+                               value="{{ record_data.get('LOTE', '') }}" required {% if is_edit_mode %}disabled{% endif %}>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="VERSION_ESPECIFICACION" class="form-label">Versión de Especificación</label>
@@ -55,7 +99,11 @@
                     <div class="col-md-4 mb-3">
                         <label for="CANTIDAD" class="form-label">Cantidad</label>
                         <div class="input-group">
-                            <input type="number" step="0.01" class="form-control" id="CANTIDAD" name="CANTIDAD" value="{{ record_data.get('CANTIDAD', '').split(' ')[0] }}" required {% if is_edit_mode %}disabled{% endif %}>
+                            <input type="number" step="1" min="1" max="999999" class="form-control" id="CANTIDAD" name="CANTIDAD"
+                                   pattern="\d{1,6}"
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);"
+                                   title="Solo se permiten números enteros positivos, máximo 6 dígitos."
+                                   value="{{ record_data.get('CANTIDAD', '').split(' ')[0] }}" required {% if is_edit_mode %}disabled{% endif %}>
                             <select class="form-select" name="UNIDAD_CANTIDAD" style="max-width: 80px;" {% if is_edit_mode %}disabled{% endif %}>
                                 <option {% if 'KG' in record_data.get('CANTIDAD', 'KG') %}selected{% endif %}>KG</option>
                                 <option {% if 'L' in record_data.get('CANTIDAD', 'L') %}selected{% endif %}>L</option>
@@ -88,8 +136,20 @@
                     </div>
                 </div>
                  <div class="row">
-                    <div class="col-md-6 mb-3"><label>Laboratorio</label><input type="text" class="form-control" name="LABORATORIO" value="{{ record_data.get('LABORATORIO', 'Agrovet Market') }}" required></div>
-                    <div class="col-md-6 mb-3"><label>Referencia (Opcional)</label><input type="text" class="form-control" name="REFERENCIA" value="{{ record_data.get('REFERENCIA', '') }}"></div>
+                    <div class="col-md-6 mb-3">
+                        <label>Laboratorio</label>
+                        <input type="text" class="form-control" name="LABORATORIO" 
+                               pattern="[A-Za-z0-9\s\-\.]{1,50}"
+                               title="Solo letras, números, espacios, puntos y guiones. Máximo 50 caracteres"
+                               value="{{ record_data.get('LABORATORIO', 'Agrovet Market') }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Referencia (Opcional)</label>
+                        <input type="text" class="form-control" name="REFERENCIA" 
+                               pattern="[A-Za-z0-9\s\-\._]{0,30}"
+                               title="Solo letras, números, espacios, guiones, puntos y guiones bajos. Máximo 30 caracteres"
+                               value="{{ record_data.get('REFERENCIA', '') }}">
+                    </div>
                 </div>
             </div>
         </div>
@@ -103,13 +163,29 @@
                         <tbody>
                             {% for i in range(1, 21) %}
                             <tr>
-                                <td><input type="text" class="form-control" name="ENSAYO{{i}}" value="{{ record_data.get('ENSAYO' ~ i, '') }}"></td>
-                                <td><input type="text" class="form-control" name="ESPECIFICACION{{i}}" value="{{ record_data.get('ESPECIFICACION' ~ i, '') }}"></td>
+                                <td>
+                                    <input type="text" class="form-control" name="ENSAYO{{i}}" 
+                                           pattern="[A-Za-z0-9\s\-\.\(\)%°μ]{0,100}"
+                                           title="Formato de ensayo válido (letras, números, símbolos científicos)"
+                                           value="{{ record_data.get('ENSAYO' ~ i, '') }}">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" name="ESPECIFICACION{{i}}" 
+                                           pattern="[A-Za-z0-9\s\-\.\(\)%<>=±μ/]{0,150}"
+                                           title="Formato de especificación válido"
+                                           value="{{ record_data.get('ESPECIFICACION' ~ i, '') }}">
+                                </td>
                                 <td>
                                     {% if is_edit_mode and session.get('role') in ['Administrador', 'Supervisor'] %}
-                                        <input type="text" class="form-control" name="RESULTADO{{i}}" value="{{ record_data.get('RESULTADO' ~ i, '') }}">
+                                        <input type="text" class="form-control" name="RESULTADO{{i}}" 
+                                               pattern="[0-9\.\,\-\+\s<>=±μ/]{0,50}"
+                                               title="Solo números, símbolos de comparación y unidades"
+                                               value="{{ record_data.get('RESULTADO' ~ i, '') }}">
                                     {% else %}
-                                        <input type="text" class="form-control" name="RESULTADO{{i}}" value="{{ record_data.get('RESULTADO' ~ i, '') }}" readonly>
+                                        <input type="text" class="form-control" name="RESULTADO{{i}}" 
+                                               pattern="[0-9\.\,\-\+\s<>=±μ/]{0,50}"
+                                               title="Solo números, símbolos de comparación y unidades"
+                                               value="{{ record_data.get('RESULTADO' ~ i, '') }}" readonly>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -330,5 +406,26 @@
     flatpickr(".datepicker", {
         dateFormat: "d-m-Y"
     });
+
+    // Validación en tiempo real para mejor UX
+    function addRealTimeValidation() {
+        const inputs = document.querySelectorAll('input[pattern]');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value && !this.checkValidity()) {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                } else if (this.value) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-invalid', 'is-valid');
+                }
+            });
+        });
+    }
+    
+    // Inicializar validación en tiempo real
+    addRealTimeValidation();
 </script>
 {% endblock %}

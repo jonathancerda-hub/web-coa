@@ -50,7 +50,6 @@ Este sistema permite gestionar certificados de análisis de productos, facilitan
 
 ## 9. Soporte
 - Para dudas o problemas, contacte al administrador del sistema o escriba a soporte@agrovet.com.
-
 ---
 
 **¡Gracias por usar el sistema de certificados Agrovet!**

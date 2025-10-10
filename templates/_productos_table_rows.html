@@ -1,0 +1,19 @@
+{% for p in productos %}
+<tr>
+    <td>{{ p.PRODUCTO }}</td>
+    <td>{{ p.FORMA_FARMACEUTICA }}</td>
+    <td>{{ p.PRESENTACION }}</td>
+    <td class="text-center">
+        <form action="{{ url_for('eliminar_presentacion', product_name=p.PRODUCTO | urlencode, presentation=p.PRESENTACION | urlencode) }}" method="POST" style="display: inline-block;">
+            <button type="submit" class="btn btn-danger btn-sm" 
+                    onclick="return confirm('¿Estás seguro de que quieres eliminar esta presentación?');">
+                Eliminar
+            </button>
+        </form>
+    </td>
+</tr>
+{% else %}
+<tr>
+    <td colspan="4" class="text-center">No se encontraron productos con ese criterio.</td>
+</tr>
+{% endfor %}

@@ -16,10 +16,16 @@
     {% endwith %}
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Gestión de Productos</h1>
-        <a href="{{ url_for('nuevo_producto') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-2"></i>Añadir Nueva Presentación
-        </a>
+        <h1 class="mb-0">Gestión de Productos</h1>
+        <div class="d-flex">
+            <form method="GET" action="{{ url_for('gestion_productos') }}" class="d-flex me-2">
+                <input class="form-control me-2" type="search" placeholder="Buscar producto..." name="search" id="liveSearchInput" value="{{ search_term or '' }}">
+                <a href="{{ url_for('gestion_productos') }}" class="btn btn-outline-secondary ms-1" title="Limpiar búsqueda"><i class="bi bi-x-lg"></i></a>
+            </form>
+            <a href="{{ url_for('nuevo_producto') }}" class="btn btn-primary text-nowrap">
+                <i class="bi bi-plus-circle me-2"></i>Añadir
+            </a>
+        </div>
     </div>
 
     <div class="card shadow-sm">
@@ -35,29 +41,54 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for p in productos %}
-                        <tr>
-                            <td>{{ p.PRODUCTO }}</td>
-                            <td>{{ p.FORMA_FARMACEUTICA }}</td>
-                            <td>{{ p.PRESENTACION }}</td>
-                            <td class="text-center">
-                                <form action="{{ url_for('eliminar_presentacion', product_name=p.PRODUCTO | urlencode, presentation=p.PRESENTACION | urlencode) }}" method="POST" style="display: inline-block;">
-                                    <button type="submit" class="btn btn-danger btn-sm" 
-                                            onclick="return confirm('¿Estás seguro de que quieres eliminar esta presentación?');">
-                                        Eliminar
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="4" class="text-center">No hay productos registrados.</td>
-                        </tr>
-                        {% endfor %}
+                        {% include '_productos_table_rows.html' %}
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+
+    <div class="mt-4" id="paginationContainer">
+        {% include '_pagination.html' %}
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('liveSearchInput');
+    const tableBody = document.querySelector('table tbody');
+    const paginationContainer = document.getElementById('paginationContainer');
+    let searchTimeout;
+
+    function fetchProducts(page = 1) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const searchTerm = searchInput.value;
+            const url = `{{ url_for('gestion_productos') }}?search=${encodeURIComponent(searchTerm)}&page=${page}`;
+
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                tableBody.innerHTML = data.table_html;
+                paginationContainer.innerHTML = data.pagination_html;
+            })
+            .catch(error => console.error('Error en la búsqueda:', error));
+        }, 300);
+    }
+
+    searchInput.addEventListener('keyup', () => fetchProducts(1));
+
+    // Delegación de eventos para la paginación
+    paginationContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('page-link')) {
+            e.preventDefault();
+            const url = new URL(e.target.href);
+            const page = url.searchParams.get('page');
+            fetchProducts(page);
+        }
+    });
+});
+</script>
 
 {% endblock %}

@@ -12,19 +12,28 @@
                 
                 <div class="mb-3">
                     <label for="nombre" class="form-label">Nombre del Producto</label>
-                    <input type="text" class="form-control" id="nombre" name="nombre" required>
-                    <div class="form-text">Ej: Amoxicilina 500mg</div>
+                    <input type="text" class="form-control" id="nombre" name="nombre" 
+                           pattern="[A-Za-z0-9\s\-\.]{3,100}"
+                           title="Solo letras, números, espacios, guiones y puntos. Entre 3 y 100 caracteres"
+                           required>
+                    <div class="form-text">Ej: Amoxicilina 500mg (solo letras, números, espacios, guiones y puntos)</div>
                 </div>
 
                 <div class="mb-3">
                     <label for="forma" class="form-label">Forma Farmacéutica</label>
-                    <input type="text" class="form-control" id="forma" name="forma" required>
-                    <div class="form-text">Ej: Polvo Soluble, Solución Inyectable</div>
+                    <input type="text" class="form-control" id="forma" name="forma" 
+                           pattern="[A-Za-z\s\-]{3,50}"
+                           title="Solo letras, espacios y guiones. Entre 3 y 50 caracteres"
+                           required>
+                    <div class="form-text">Ej: Polvo Soluble, Solución Inyectable (solo letras y espacios)</div>
                 </div>
                 
                 <div class="mb-3">
                     <label for="presentacion" class="form-label">Presentación</label>
-                    <input type="text" class="form-control" id="presentacion" name="presentacion" required>
+                    <input type="text" class="form-control" id="presentacion" name="presentacion" 
+                           pattern="[A-Za-z0-9\s\-\.]{3,80}"
+                           title="Solo letras, números, espacios, guiones y puntos. Entre 3 y 80 caracteres"
+                           required>
                      <div class="form-text">Ej: Caja de 100 sobres, Frasco 250mL</div>
                 </div>
 

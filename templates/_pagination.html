@@ -1,20 +1,33 @@
 {% if total_pages > 1 %}
+{% set endpoint_name = endpoint or 'registros' %}
 <nav aria-label="Navegación de páginas" class="mt-4 d-flex justify-content-center">
     <ul class="pagination">
         <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('registros', page=current_page - 1, search=search_term) }}">Anterior</a>
+            <a class="page-link" href="{{ url_for(endpoint_name, page=current_page - 1, search=search_term) }}">Anterior</a>
         </li>
-        {% for page_num in range(1, total_pages + 1) %}
-            {% if page_num == current_page %}
-                <li class="page-item active" aria-current="page">
-                    <span class="page-link">{{ page_num }}</span>
-                </li>
+
+        {# Lógica para paginación inteligente #}
+        {% set window = 2 %} {# Páginas a mostrar a cada lado de la actual #}
+        {% for p in range(1, total_pages + 1) %}
+            {% set is_first = (p == 1) %}
+            {% set is_last = (p == total_pages) %}
+            {% set in_window = (p >= current_page - window and p <= current_page + window) %}
+
+            {% if is_first or is_last or in_window %}
+                {% if p == current_page %}
+                    <li class="page-item active" aria-current="page"><span class="page-link">{{ p }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for(endpoint_name, page=p, search=search_term) }}">{{ p }}</a></li>
+                {% endif %}
+            {% elif loop.previtem and (loop.previtem > current_page + window or loop.previtem < current_page - window) %}
+                {# No hacer nada si ya se imprimió un separador #}
             {% else %}
-                <li class="page-item"><a class="page-link" href="{{ url_for('registros', page=page_num, search=search_term) }}">{{ page_num }}</a></li>
+                <li class="page-item disabled"><span class="page-link">...</span></li>
             {% endif %}
         {% endfor %}
+
         <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('registros', page=current_page + 1, search=search_term) }}">Siguiente</a>
+            <a class="page-link" href="{{ url_for(endpoint_name, page=current_page + 1, search=search_term) }}">Siguiente</a>
         </li>
     </ul>
 </nav>

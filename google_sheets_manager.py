@@ -227,8 +227,9 @@ class GoogleSheetManager:
             users_sheet = self.spreadsheet.worksheet("Usuarios")
             cell = users_sheet.find(username)
             if not cell: return False, "Usuario no encontrado."
-            users_sheet.update_cell(cell.row, 3, new_data['ROL'])
-            if 'PASSWORD' in new_data and new_data['PASSWORD']:
+            if 'ROL' in new_data:
+                users_sheet.update_cell(cell.row, 3, new_data['ROL'])
+            if 'PASSWORD' in new_data:
                 users_sheet.update_cell(cell.row, 2, new_data['PASSWORD'])
             return True, "Usuario actualizado con éxito."
         except Exception as e:

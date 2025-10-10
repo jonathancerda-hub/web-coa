@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual de Usuario - Sistema Coadix</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        :root {
+            /* Paleta de colores inspirada en Odoo */
+            --primary-color: #714B67; /* Morado principal de Odoo */
+            --secondary-color: #00A09D; /* Verde/Turquesa secundario */
+            --background-color: #f9f9f9;
+            --text-color: #333;
+            --header-bg: #ffffff;
+            --nav-width: 300px;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            line-height: 1.7;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            display: flex;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            color: var(--primary-color);
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        header p {
+            margin: 0.5rem 0 0;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        nav {
+            width: var(--nav-width);
+            background: var(--header-bg);
+            padding: 1.5rem;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+        
+        nav .logo {
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        nav .logo .fa-cogs {
+            margin-right: 10px;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        nav ul li a {
+            color: #555;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        nav ul ul {
+            padding-left: 25px; /* Indentación para sub-items */
+            margin-top: 5px;
+        }
+        
+        nav ul ul li a {
+            font-size: 0.9em;
+            padding: 0.6rem 1rem;
+        }
+
+        nav ul li a:hover, nav ul li a.active {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        nav i.fa-fw {
+            width: 20px;
+        }
+
+        main {
+            margin-left: var(--nav-width);
+            padding: 0;
+            width: calc(100% - var(--nav-width));
+        }
+        
+        .content-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        section {
+            margin-bottom: 3.5rem;
+            padding-top: 2.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        section:last-of-type {
+            border-bottom: none;
+        }
+
+        h2 {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--primary-color);
+            font-size: 2em;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            color: #444;
+            margin-top: 2rem;
+        }
+
+        code {
+            background-color: #e9e4e8;
+            color: var(--primary-color);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+        }
+        
+        .note {
+            background-color: #f0eaf0;
+            border-left: 5px solid var(--primary-color);
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+        
+        .note strong {
+            color: var(--primary-color);
+        }
+        
+        ol, ul {
+            padding-left: 25px;
+        }
+        
+        li {
+            margin-bottom: 0.8rem;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 2rem;
+            background-color: #333;
+            color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo"><i class="fa-solid fa-cogs"></i>Coadix</div>
+        <ul>
+            <li><a href="#introduccion" class="active"><i class="fa-solid fa-rocket fa-fw"></i> 1. Introducción</a>
+                <ul>
+                    <li><a href="#que-es"><i class="fa-solid fa-circle-question fa-fw"></i> 1.1. ¿Qué es?</a></li>
+                    <li><a href="#a-quien"><i class="fa-solid fa-users fa-fw"></i> 1.2. Dirigido a</a></li>
+                </ul>
+            </li>
+            <li><a href="#acceso"><i class="fa-solid fa-key fa-fw"></i> 2. Acceso y Seguridad</a></li>
+            <li><a href="#dashboard"><i class="fa-solid fa-chart-pie fa-fw"></i> 3. Dashboard de Calidad</a></li>
+            <li><a href="#registros"><i class="fa-solid fa-list-tasks fa-fw"></i> 4. Registros de Certificados</a>
+                 <ul>
+                    <li><a href="#busqueda"><i class="fa-solid fa-magnifying-glass fa-fw"></i> 4.1. Búsqueda</a></li>
+                    <li><a href="#paginacion"><i class="fa-solid fa-sort-numeric-down fa-fw"></i> 4.2. Paginación</a></li>
+                    <li><a href="#pdf"><i class="fa-solid fa-file-pdf fa-fw"></i> 4.3. Generación PDF</a></li>
+                </ul>
+            </li>
+            <li><a href="#gestion-certificados"><i class="fa-solid fa-file-signature fa-fw"></i> 5. Gestión de Certificados</a>
+                <ul>
+                    <li><a href="#crear-certificado"><i class="fa-solid fa-file-circle-plus fa-fw"></i> 5.1. Nuevo Certificado</a></li>
+                    <li><a href="#edicion"><i class="fa-solid fa-pen-to-square fa-fw"></i> 5.2. Editar Certificado</a></li>
+                </ul>
+            </li>
+            <li><a href="#gestion-avanzada"><i class="fa-solid fa-cogs fa-fw"></i> 6. Gestión Avanzada</a>
+                <ul>
+                    <li><a href="#gestion-usuarios"><i class="fa-solid fa-users-cog fa-fw"></i> 6.1. Usuarios</a></li>
+                    <li><a href="#gestion-productos"><i class="fa-solid fa-box-open fa-fw"></i> 6.2. Productos</a></li>
+                    <li><a href="#log-actividad"><i class="fa-solid fa-clipboard-list fa-fw"></i> 6.3. Log de Actividad</a></li>
+                </ul>
+            </li>
+            <li><a href="#cierre"><i class="fa-solid fa-power-off fa-fw"></i> 7. Cierre de Sesión</a></li>
+            <li><a href="#soporte"><i class="fa-solid fa-headset fa-fw"></i> 8. Soporte Técnico</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <header>
+            <h1>Manual de Usuario del Sistema Coadix</h1>
+            <p>Gestión de Certificados para Pharmadix y Agrovet</p>
+        </header>
+
+        <div class="content-wrapper">
+            <section id="introduccion">
+                <h2><i class="fa-solid fa-rocket"></i>1. Introducción</h2>
+                <h3 id="que-es"><i class="fa-solid fa-circle-question"></i>1.1. ¿Qué es el Sistema Coadix?</h3>
+                <p>¡Bienvenido a <strong>Coadix</strong>! Esta es la herramienta centralizada diseñada para optimizar y facilitar la gestión de los certificados de análisis de productos. Con este sistema, podrás registrar, editar, consultar y generar los certificados en formato PDF de una manera rápida, segura y eficiente.</p> 
+                <h3 id="a-quien"><i class="fa-solid fa-users"></i>1.2. ¿A quién va dirigido este manual?</h3>
+                <p>Este manual está dirigido a todos los colaboradores autorizados de <strong>Pharmadix</strong> y <strong>Agrovet</strong> para la gestión de certificados. Aquí encontrarás toda la información necesaria para utilizar el sistema, desde el acceso inicial hasta la generación de los documentos finales.</p>
+            </section>
+
+            <section id="acceso">
+                <h2><i class="fa-solid fa-key"></i>2. Acceso y Seguridad</h2>
+                <h3 id="requisitos"><i class="fa-solid fa-check-double"></i>2.1. Requisitos Previos</h3>
+                <ul>
+                    <li>Contar con un <strong>usuario y contraseña</strong> únicos, proporcionados por el administrador del sistema.</li>
+                    <li>Tener acceso a un navegador web moderno (se recomienda Google Chrome, Mozilla Firefox, o Edge).</li>
+                </ul>
+                <h3><i class="fa-solid fa-right-to-bracket"></i>2.2. Pasos para Iniciar Sesión</h3>
+                <ol>
+                    <li>Abre tu navegador web e ingresa a la dirección web de Coadix.</li>
+                    <li>Visualizarás la pantalla de inicio de sesión.</li>
+                    <li>Ingresa tu <code>usuario</code> en el campo correspondiente.</li>
+                    <li>Ingresa tu <code>contraseña</code> en el campo correspondiente.</li>
+                    <li>Haz clic en el botón <strong>"Ingresar"</strong> para acceder al panel principal.</li>
+                </ol>
+                 <div class="note">
+                    <strong>Seguridad:</strong> El sistema limita el número de intentos de inicio de sesión. Si excedes el límite, tu acceso se bloqueará temporalmente. Si has olvidado tu contraseña, contacta al administrador.
+                </div>
+            </section>
+
+            <section id="dashboard">
+                <h2><i class="fa-solid fa-chart-pie"></i>3. Dashboard de Calidad</h2>
+                <p>El Dashboard es la primera pantalla que verás después de iniciar sesión. Ofrece una vista general y analítica del estado de los certificados.</p>
+                <ul>
+                    <li><strong>Filtros:</strong> Puedes filtrar los datos por <code>Producto</code> y por un <code>rango de fechas de registro</code>.</li>
+                    <li><strong>Tarjetas de Estadísticas:</strong> Muestran un resumen rápido del total de certificados, aprobados, rechazados y pendientes en el periodo seleccionado.</li>
+                    <li><strong>Gráfico de Distribución:</strong> Un gráfico de torta que muestra visualmente la proporción de cada estado (Aprobado, Rechazado, Pendiente).</li>
+                    <li><strong>Resumen Mensual:</strong> Una tabla que desglosa los resultados por mes, permitiéndote hacer clic en una fila para ver los registros de ese mes específico.</li>
+                    <li><strong>Gráfico de Tendencia:</strong> Un gráfico de líneas que muestra la evolución de certificados aprobados vs. rechazados a lo largo del año.</li>
+                </ul>
+            </section>
+
+            <section id="registros">
+                <h2><i class="fa-solid fa-list-tasks"></i>4. Registros de Certificados</h2>
+                <p>Esta es la vista principal para consultar todos los certificados registrados en el sistema. La tabla está ordenada para mostrar los registros más recientes primero.</p>
+                <h3 id="busqueda"><i class="fa-solid fa-magnifying-glass"></i>4.1. Búsqueda en Tiempo Real</h3>
+                <ul>
+                    <li>Utiliza la barra de <strong>búsqueda</strong> en la parte superior para filtrar la lista.</li>
+                    <li>Puedes buscar por <code>código</code>, <code>producto</code>, <code>lote</code> o cualquier otro dato visible.</li>
+                    <li>Los resultados se actualizan instantáneamente a medida que escribes, consultando toda la base de datos.</li>
+                </ul>
+                <h3 id="paginacion"><i class="fa-solid fa-sort-numeric-down"></i>4.2. Paginación</h3>
+                <p>Para un rendimiento óptimo, los registros se muestran en páginas de 20. Utiliza los controles de paginación en la parte inferior para navegar entre las diferentes páginas de resultados.</p>
+                <h3 id="pdf"><i class="fa-solid fa-file-pdf"></i>4.3. Generación de PDF</h3>
+                <ol>
+                    <li>En la columna "Acciones" de cada registro, encontrarás los botones para generar los certificados en formato PDF.</li>
+                    <li>Haz clic en el ícono de PDF deseado (<i class="fa-solid fa-file-earmark-pdf"></i> o <i class="fa-solid fa-file-earmark-pdf-fill"></i>).</li>
+                    <li>El certificado se abrirá en una nueva pestaña, listo para ser descargado o impreso.</li>
+                </ol>
+            </section>
+
+            <section id="gestion-certificados">
+                <h2><i class="fa-solid fa-file-signature"></i>5. Gestión de Certificados</h2>
+                <h3 id="crear-certificado"><i class="fa-solid fa-file-circle-plus"></i>5.1. Crear un Nuevo Certificado</h3>
+                <ol>
+                    <li>Desde la barra de navegación, haz clic en <strong>"Nuevo Certificado"</strong>.</li>
+                    <li>Se desplegará un formulario con los campos a completar.</li>
+                    <li>Completa la información solicitada, prestando especial atención a los campos obligatorios.</li>
+                    <li>Al seleccionar un producto, los campos de <code>Presentación</code> y <code>Versión de Especificación</code> se cargarán automáticamente.</li>
+                    <li>Una vez llenado el formulario, revisa que toda la información sea correcta.</li>
+                    <li>Para finalizar, presiona el botón <strong>"Guardar Cambios"</strong>. El sistema confirmará que el certificado ha sido registrado exitosamente.</li>
+                </ol>
+                <h3 id="edicion"><i class="fa-solid fa-pen-to-square"></i>5.2. Editar un Certificado Existente</h3>
+                <ol>
+                    <li>En la página de "Registros", localiza el certificado que deseas modificar.</li>
+                    <li>En la fila del certificado, haz clic en el ícono de <strong>Editar</strong> <i class="fa-solid fa-pen-to-square"></i>.</li>
+                    <li>Se abrirá el formulario con la información del certificado precargada.</li>
+                    <li>Los "Datos del Producto" (producto, lote, etc.) estarán bloqueados para garantizar la integridad de los datos.</li>
+                    <li>Podrás modificar los resultados de los análisis, las fechas y la conclusión final.</li>
+                    <li>Una vez realizados los cambios, haz clic en <strong>"Guardar Cambios"</strong> para actualizar el registro.</li>
+                </ol>
+            <section id="gestion-avanzada">
+                <h2><i class="fa-solid fa-cogs"></i>6. Gestión Avanzada</h2>
+                <p>Estas secciones solo son visibles para usuarios con los permisos adecuados.</p>
+                <h3 id="gestion-usuarios"><i class="fa-solid fa-users-cog"></i>6.1. Gestión de Usuarios (Solo Administradores)</h3>
+                <p>Permite crear, editar y eliminar usuarios, así como asignarles roles (Administrador, Supervisor, Operario).</p>
+                <h3 id="gestion-productos"><i class="fa-solid fa-box-open"></i>6.2. Gestión de Productos (Supervisores y Admins)</h3>
+                <p>Permite añadir nuevas presentaciones a los productos existentes o eliminar las que ya no se utilicen.</p>
+                <h3 id="log-actividad"><i class="fa-solid fa-clipboard-list"></i>6.3. Log de Actividad (Solo Administradores)</h3>
+                <p>Registra todas las acciones importantes realizadas en el sistema (inicios de sesión, creación de certificados, etc.), indicando qué usuario las realizó y cuándo.</p>
+            </section>
+
+            <section id="cierre">
+                <h2><i class="fa-solid fa-power-off"></i>7. Cierre de Sesión</h2>
+                <p>Para proteger tu cuenta y la información sensible del sistema, es fundamental que cierres tu sesión cuando termines de utilizarlo.</p>
+                 <ol>
+                    <li>Ubica el <strong>ícono de salida</strong> <i class="fa-solid fa-power-off"></i> en la esquina superior derecha de la pantalla.</li>
+                    <li>Haz clic sobre él para cerrar tu sesión de forma segura.</li>
+                </ol>
+            </section>
+
+            <section id="soporte">
+                <h2><i class="fa-solid fa-headset"></i>8. Soporte Técnico</h2>
+                <p>Si encuentras algún problema, tienes dudas sobre el funcionamiento del sistema o alguna sugerencia de mejora, no dudes en contactar a nuestro equipo de soporte:</p>
+                <ul>
+                    <li><strong>Contacto Principal:</strong> Administrador del Sistema.</li>
+                     <li><strong>Correo Electrónico:</strong> <a href="mailto:jonathan.cerda@agrovet.com">jonathan.cerda@agrovetmarket.com</a></li>
+                </ul>
+            </section>
+        </div>
+        
+        <footer>
+            <p>&copy; 2025 Coadix | Desarrollado para Pharmadix y Agrovet.</p>
+        </footer>
+    </main>
+
+    <script>
+        // Script para resaltar el enlace activo en el menú de navegación al hacer scroll
+        document.addEventListener("DOMContentLoaded", function() {
+            const sections = document.querySelectorAll("section");
+            const navLinks = document.querySelectorAll("nav ul li a");
+
+            const options = {
+                rootMargin: "-20% 0px -75% 0px", // Ajusta el punto de activación
+                threshold: 0
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const activeId = entry.target.id;
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            // Resalta el link principal y el sub-item
+                            if (link.getAttribute('href').includes(activeId)) {
+                                link.classList.add('active');
+                                // Si es un sub-item, resalta también el padre
+                                const parentLink = link.closest('ul').previousElementSibling;
+                                if(parentLink && parentLink.tagName === 'A') {
+                                    parentLink.classList.add('active');
+                                }
+                            }
+                        });
+                    }
+                });
+            }, options);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
