@@ -172,7 +172,16 @@ class GoogleSheetManager:
             return False, f"Error al eliminar la presentación: {e}"
 
     def get_all_records(self):
-        return self.worksheet.get_all_records()
+        # --- INICIO DE LA CORRECCIÓN ---
+        # Se usa get_all_values con value_render_option='FORMATTED_VALUE' para obtener
+        # los datos tal como se ven en la hoja (texto), evitando la conversión automática
+        # de '0123' a 123. Luego, se construyen los diccionarios manualmente.
+        all_values = self.worksheet.get_all_values(value_render_option='FORMATTED_VALUE')
+        if not all_values or len(all_values) < 2:
+            return []
+        headers = all_values[0]
+        records = [dict(zip(headers, row)) for row in all_values[1:]]
+        return records
     
     def get_next_codigo(self):
         current_year = str(datetime.now().year)

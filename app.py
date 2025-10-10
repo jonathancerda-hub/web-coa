@@ -119,6 +119,11 @@ def logout():
     flash("Has cerrado la sesión.", "info")
     return redirect(url_for('login'))
 
+@app.route('/forgot-password')
+def forgot_password():
+    # Simplemente renderiza una página estática con instrucciones.
+    return render_template('forgot_password.html')
+
 # --- Rutas Principales ---
 @app.route('/')
 def registros():
@@ -473,6 +478,13 @@ def nuevo_registro():
             datos_formulario['CREADO_POR'] = session.get('username', 'desconocido')
             datos_formulario['CANTIDAD'] = f"{request.form.get('CANTIDAD', '0')} {request.form.get('UNIDAD_CANTIDAD', 'KG')}"
             lista_ordenada = [datos_formulario.get(col, '') for col in get_column_order()]
+
+            # --- INICIO DE LA CORRECCIÓN ---
+            # Añadir un apóstrofo al inicio del LOTE para forzar a Google Sheets a tratarlo como texto.
+            lote_index = get_column_order().index('LOTE')
+            lista_ordenada[lote_index] = f"'{datos_formulario.get('LOTE', '')}"
+            # --- FIN DE LA CORRECCIÓN ---
+
             data_manager.add_record(lista_ordenada)
             flash('¡Certificado registrado con éxito!', 'success')
             data_manager.log_action(session.get('username'), "Creó Certificado", f"Código: {datos_formulario['CODIGO']}")
