@@ -49,7 +49,11 @@ class GoogleSheetManager:
             print("Conexión con Google Sheets establecida.")
         except Exception as e:
             print(f"ERROR CRÍTICO al inicializar GoogleSheetManager: {e}")
-            raise e
+            # --- INICIO DE LA CORRECCIÓN ---
+            # No relanzar la excepción para permitir que la app inicie incluso si Sheets falla.
+            self.client = None
+            self.spreadsheet = None
+            # --- FIN DE LA CORRECCIÓN ---
 
         # --- CONEXIÓN A SUPABASE (SOLO PARA LOGS) ---
         try:
