@@ -7,6 +7,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from functools import wraps
 from urllib.parse import quote_plus, unquote_plus
+from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -25,6 +26,12 @@ from google_sheets_manager import GoogleSheetManager, get_column_order
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'una_clave_secreta_muy_larga_y_aleatoria_para_desarrollo')
 app.permanent_session_lifetime = timedelta(minutes=15)
+
+# --- INICIO DE LA CORRECCIÓN PARA DESPLIEGUE ---
+# Se añade ProxyFix para que Flask genere URLs con https correctamente cuando
+# se ejecuta detrás de un proxy inverso como el de Render.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+# --- FIN DE LA CORRECCIÓN ---
 
 # --- INICIO DE LA CONFIGURACIÓN DE OAUTH ---
 # --- INICIO DE LA CORRECCIÓN ---
