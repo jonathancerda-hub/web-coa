@@ -161,7 +161,10 @@ def logout():
 @app.route('/login/google')
 def login_google():
     """Redirige al usuario a la página de inicio de sesión de Google."""
-    redirect_uri = url_for('auth_google', _external=True)
+    # --- INICIO DE LA CORRECCIÓN DEFINITIVA ---
+    # Se fuerza el esquema a 'https' para asegurar que la URL de redirección
+    # coincida exactamente con la configurada en Google Cloud en producción.
+    redirect_uri = url_for('auth_google', _external=True, _scheme='https')
     return google.authorize_redirect(redirect_uri)
 
 @app.route('/login/google/callback')
