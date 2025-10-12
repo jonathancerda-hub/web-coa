@@ -71,8 +71,13 @@ class GoogleSheetManager:
             self.supabase = None
 
         # --- Carga de datos inicial desde Google Sheets ---
-        self.product_data = self._load_product_data()
-        self.specs_data = self._load_specs_data()
+        # --- INICIO DE LA CORRECCIÓN ---
+        # Solo cargar datos si la conexión con Sheets fue exitosa.
+        if self.spreadsheet:
+            self.product_data = self._load_product_data()
+            self.specs_data = self._load_specs_data()
+        else:
+            self.product_data, self.specs_data = {}, {}
     
     # --- MÉTODOS QUE USAN SUPABASE ---
     def log_action(self, username, action, details=""):
