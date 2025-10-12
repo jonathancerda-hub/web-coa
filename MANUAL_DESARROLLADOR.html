@@ -315,6 +315,20 @@ gunicorn --workers 4 --bind 0.0.0.0:8000 app:app</code></pre>
                 <div class="note">
                     <strong>Variables de Entorno en Producción:</strong> En un entorno de producción, las variables de entorno (como <code class="inline">SECRET_KEY</code>, etc.) deben ser configuradas directamente en el sistema operativo o a través del panel de control del proveedor de hosting, no mediante un archivo <code class="inline">.env</code>.
                 </div>
+
+                <h3><i class="fa-solid fa-cloud-arrow-up"></i>Despliegue en Render</h3>
+                <p>Para desplegar en un servicio como <strong>Render</strong>, sigue estos pasos:</p>
+                <ol>
+                    <li><strong>Comando de Construcción (Build Command):</strong> <code class="inline">pip install -r requirements.txt</code></li>
+                    <li><strong>Comando de Inicio (Start Command):</strong> <code class="inline">gunicorn app:app</code></li>
+                    <li><strong>Variables de Entorno:</strong> Configura todas las variables del archivo <code class="inline">.env</code> en la sección "Environment" de tu servicio en Render.</li>
+                </ol>
+                <div class="note">
+                    <strong>¡Crítico para el Login con Google!</strong> Después de desplegar, Render te dará una URL pública (ej. <code>https://mi-app.onrender.com</code>). Debes ir a tu Google Cloud Console, a la configuración de tu ID de cliente de OAuth, y en <strong>"URIs de redireccionamiento autorizados"</strong>, añadir la nueva URL seguida de <code>/login/google/callback</code>. <br>
+                    Ejemplo: <code>https://mi-app.onrender.com/login/google/callback</code>.
+                    <br>Si no haces esto, el inicio de sesión con Google fallará con un error <code>redirect_uri_mismatch</code>.
+                </div>
+
             </section>
         </div>
         
