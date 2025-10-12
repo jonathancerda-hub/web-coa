@@ -7,6 +7,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from functools import wraps
 from urllib.parse import quote_plus, unquote_plus
+from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -24,6 +25,36 @@ from google_sheets_manager import GoogleSheetManager, get_column_order
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'una_clave_secreta_muy_larga_y_aleatoria_para_desarrollo')
 app.permanent_session_lifetime = timedelta(minutes=15)
+
+# --- INICIO DE LA CONFIGURACIÓN DE OAUTH ---
+# --- INICIO DE LA CORRECCIÓN ---
+# Se inicializa OAuth sin la app y se configura después con init_app.
+# Esto evita problemas de contexto y asegura que la sesión se maneje correctamente.
+oauth = OAuth()
+# --- FIN DE LA CORRECCIÓN ---
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID'),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+    # --- INICIO DE LA CORRECCIÓN ---
+    # Se eliminan los endpoints manuales y se confía únicamente en server_metadata_url.
+    # Esto asegura que Authlib siempre use la configuración correcta de Google.
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'},
+)
+# --- INICIO DE LA CORRECCIÓN ---
+# Se llama a init_app para vincular correctamente OAuth con la aplicación Flask.
+oauth.init_app(app)
+# --- FIN DE LA CORRECCIÓN ---
+
+# --- FIN DE LA CONFIGURACIÓN DE OAUTH ---
+
+# --- INICIO DE LA VALIDACIÓN DE CREDENCIALES OAUTH ---
+google_client_id = os.getenv('GOOGLE_CLIENT_ID')
+google_client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+if not all([google_client_id, google_client_secret]):
+    print("\n\n*** ADVERTENCIA: Faltan las variables de entorno GOOGLE_CLIENT_ID o GOOGLE_CLIENT_SECRET. El inicio de sesión con Google no funcionará. ***\n\n")
+# --- FIN DE LA VALIDACIÓN DE CREDENCIALES OAUTH ---
 
 limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"], storage_uri="memory://")
 
@@ -118,6 +149,64 @@ def logout():
     session.clear()
     flash("Has cerrado la sesión.", "info")
     return redirect(url_for('login'))
+
+# --- INICIO DE LAS NUEVAS RUTAS DE OAUTH ---
+@app.route('/login/google')
+def login_google():
+    """Redirige al usuario a la página de inicio de sesión de Google."""
+    redirect_uri = url_for('auth_google', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/login/google/callback')
+def auth_google():
+    """Ruta a la que Google redirige después del login."""
+    try:
+        token = google.authorize_access_token()
+        # --- INICIO DE LA CORRECCIÓN ---
+        # Se utiliza el método userinfo() que es la forma recomendada y más segura
+        # para obtener la información del usuario, lo que resuelve el error 'invalid_claim'.
+        user_info = google.userinfo()
+        user_email = user_info.get('email')
+
+        # --- LÓGICA DE AUTORIZACIÓN ---
+        # 1. Verifica que el dominio del correo esté en la lista de dominios permitidos.
+        allowed_domains = ['@agrovetmarket.com', '@pharmadix.com']
+        if not any(user_email.endswith(domain) for domain in allowed_domains):
+            flash('Acceso denegado. Solo se permiten cuentas corporativas autorizadas.', 'danger')
+            return redirect(url_for('login'))
+
+        # 2. Busca al usuario en tu hoja de "Usuarios" para obtener su rol
+        all_users = data_manager.get_all_users()
+        user_in_sheet = next((u for u in all_users if u.get('USERNAME').lower() == user_email.lower()), None)
+
+        # --- INICIO DE LA MODIFICACIÓN: Auto-registro de usuarios ---
+        # Si el usuario no está en la hoja de cálculo pero tiene un dominio válido,
+        # se crea automáticamente con un rol por defecto.
+        if not user_in_sheet:
+            print(f"Usuario '{user_email}' no encontrado. Creando nuevo usuario...")
+            default_role = 'Operario'
+            # La contraseña se deja como un placeholder ya que el login será vía Google.
+            new_user_data = [user_email, 'N/A_OAUTH_USER', default_role]
+            success, message = data_manager.add_user(new_user_data)
+            if not success:
+                flash(f'Error al registrar automáticamente al usuario: {message}', 'danger')
+                return redirect(url_for('login'))
+            user_in_sheet = {'USERNAME': user_email, 'ROL': default_role}
+            data_manager.log_action(user_email, "Auto-registro (Google)")
+        # --- FIN DE LA MODIFICACIÓN ---
+
+        # 3. Inicia la sesión en Flask
+        session.permanent = True
+        session['username'] = user_in_sheet.get('USERNAME') # O puedes usar user_info.get('name')
+        session['role'] = user_in_sheet.get('ROL', 'Operario')
+        flash('Inicio de sesión con Google exitoso!', 'success')
+        data_manager.log_action(session.get('username'), "Inicio de Sesión (Google)")
+        return redirect(url_for('registros'))
+
+    except Exception as e:
+        flash(f'Ocurrió un error durante la autenticación con Google: {e}', 'danger')
+        return redirect(url_for('login'))
+# --- FIN DE LAS NUEVAS RUTAS DE OAUTH ---
 
 @app.route('/forgot-password')
 def forgot_password():
@@ -304,12 +393,13 @@ def nuevo_usuario():
         username = request.form.get('username')
         password = request.form.get('password')
         role = request.form.get('role')
-        if not all([username, password, role]):
-            flash('Todos los campos son obligatorios.', 'warning')
+        if not all([username, role]):
+            flash('El nombre de usuario y el rol son obligatorios.', 'warning')
             return redirect(url_for('nuevo_usuario'))
-        # Hashear la contraseña antes de guardarla
-        hashed_password = generate_password_hash(password)
-        user_data = [username, hashed_password, role]
+        
+        # Hashear la contraseña solo si se proporciona una.
+        password_to_save = generate_password_hash(password) if password else "N/A"
+        user_data = [username, password_to_save, role]
         success, message = data_manager.add_user(user_data)
         if success:
             data_manager.log_action(session.get('username'), "Creó Usuario", f"Nuevo usuario: {username}")

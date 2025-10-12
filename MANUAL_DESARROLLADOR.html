@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual de Desarrollador - Sistema Coadix</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4A4A8A; /* Un azul/morado técnico */
+            --secondary-color: #3E8E7E; /* Un verde azulado */
+            --background-color: #f9f9f9;
+            --text-color: #333;
+            --header-bg: #ffffff;
+            --nav-width: 300px;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            line-height: 1.7;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            display: flex;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            color: var(--primary-color);
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        header h1 { margin: 0; font-size: 2.5em; font-weight: 700; }
+        header p { margin: 0.5rem 0 0; color: #666; font-size: 1.1em; }
+
+        nav {
+            width: var(--nav-width);
+            background: var(--header-bg);
+            padding: 1.5rem;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+        
+        nav .logo {
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        nav .logo .fa-code { margin-right: 10px; }
+        nav ul { list-style: none; padding: 0; }
+        nav ul li a {
+            color: #555;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        nav ul ul { padding-left: 25px; margin-top: 5px; }
+        nav ul ul li a { font-size: 0.9em; padding: 0.6rem 1rem; }
+        nav ul li a:hover, nav ul li a.active {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateX(5px);
+        }
+        nav i.fa-fw { width: 20px; }
+
+        main {
+            margin-left: var(--nav-width);
+            padding: 0;
+            width: calc(100% - var(--nav-width));
+        }
+        
+        .content-wrapper { max-width: 900px; margin: 0 auto; padding: 2rem; }
+        section { margin-bottom: 3.5rem; padding-top: 2.5rem; border-bottom: 1px solid var(--border-color); }
+        section:last-of-type { border-bottom: none; }
+
+        h2 {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--primary-color);
+            font-size: 2em;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            color: #444;
+            margin-top: 2rem;
+        }
+
+        code.inline {
+            background-color: #e8e8f0;
+            color: var(--primary-color);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+        }
+
+        pre {
+            background-color: #2d2d2d;
+            color: #f1f1f1;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        
+        .note {
+            background-color: #f0eaf0;
+            border-left: 5px solid var(--primary-color);
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+        
+        .note strong { color: var(--primary-color); }
+        ol, ul { padding-left: 25px; }
+        li { margin-bottom: 0.8rem; }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 2rem;
+            background-color: #333;
+            color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo"><i class="fa-solid fa-code"></i>Coadix Dev</div>
+        <ul>
+            <li><a href="#introduccion" class="active"><i class="fa-solid fa-rocket fa-fw"></i> 1. Introducción</a></li>
+            <li><a href="#configuracion"><i class="fa-solid fa-wrench fa-fw"></i> 2. Configuración</a>
+                <ul>
+                    <li><a href="#entorno"><i class="fa-brands fa-python fa-fw"></i> 2.1. Entorno Virtual</a></li>
+                    <li><a href="#dependencias"><i class="fa-solid fa-list-check fa-fw"></i> 2.2. Dependencias</a></li>
+                    <li><a href="#variables"><i class="fa-solid fa-key fa-fw"></i> 2.3. Variables de Entorno</a></li>
+                </ul>
+            </li>
+            <li><a href="#estructura"><i class="fa-solid fa-folder-tree fa-fw"></i> 3. Estructura</a></li>
+            <li><a href="#flujo-datos"><i class="fa-solid fa-right-left fa-fw"></i> 4. Flujo de Datos</a></li>
+            <li><a href="#seguridad"><i class="fa-solid fa-shield-halved fa-fw"></i> 5. Seguridad</a></li>
+            <li><a href="#comandos"><i class="fa-solid fa-terminal fa-fw"></i> 6. Comandos CLI</a></li>
+            <li><a href="#despliegue"><i class="fa-solid fa-server fa-fw"></i> 7. Despliegue</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <header>
+            <h1>Manual de Desarrollador del Sistema Coadix</h1>
+            <p>Guía técnica para el mantenimiento y desarrollo de la aplicación.</p>
+        </header>
+
+        <div class="content-wrapper">
+            <section id="introduccion">
+                <h2><i class="fa-solid fa-rocket"></i>1. Introducción</h2>
+                <p>Este documento es la guía técnica central para el desarrollo y mantenimiento del sistema <strong>Coadix</strong>. El objetivo es proporcionar a los desarrolladores una comprensión clara de la arquitectura, las tecnologías utilizadas y las convenciones del proyecto.</p>
+                <h3><i class="fa-solid fa-microchip"></i>Stack Tecnológico</h3>
+                <ul>
+                    <li><strong>Backend:</strong> Flask (Python)</li>
+                    <li><strong>Base de Datos Principal:</strong> Google Sheets</li>
+                    <li><strong>Base de Datos para Logs:</strong> Supabase (PostgreSQL)</li>
+                    <li><strong>Frontend:</strong> HTML, CSS, JavaScript (con plantillas Jinja2)</li>
+                    <li><strong>Framework CSS:</strong> Bootstrap 5</li>
+                    <li><strong>Generación de PDF:</strong> FPDF2 (pyfpdf)</li>
+                    <li><strong>Limitación de Tasa:</strong> Flask-Limiter</li>
+                </ul>
+            </section>
+
+            <section id="configuracion">
+                <h2><i class="fa-solid fa-wrench"></i>2. Configuración del Entorno de Desarrollo</h2>
+                <p>Sigue estos pasos para configurar un entorno de desarrollo local.</p>
+                <h3 id="entorno"><i class="fa-brands fa-python"></i>2.1. Entorno Virtual</h3>
+                <p>Es crucial trabajar dentro de un entorno virtual para aislar las dependencias del proyecto.</p>
+                <pre><code># 1. Navega a la carpeta raíz del proyecto
+cd /ruta/a/web_coa
+
+# 2. Crea el entorno virtual
+python -m venv venv
+
+# 3. Activa el entorno
+# En Windows:
+.\venv\Scripts\activate
+# En macOS/Linux:
+source venv/bin/activate</code></pre>
+
+                <h3 id="dependencias"><i class="fa-solid fa-list-check"></i>2.2. Instalación de Dependencias</h3>
+                <p>Todas las librerías necesarias están listadas en el archivo <code class="inline">requirements.txt</code>.</p>
+                <pre><code>pip install -r requirements.txt</code></pre>
+
+                <h3 id="variables"><i class="fa-solid fa-key"></i>2.3. Variables de Entorno</h3>
+                <p>La configuración de la aplicación se gestiona de dos maneras:</p>
+                <ol>
+                    <li><strong>Archivo <code class="inline">credentials.json</code>:</strong> Coloca el archivo de credenciales de la cuenta de servicio de Google directamente en la carpeta raíz del proyecto.</li>
+                    <li><strong>Archivo <code class="inline">.env</code>:</strong> Crea este archivo en la raíz para el resto de las claves secretas.</li>
+                </ol>
+                <p>Contenido del archivo <code class="inline">.env</code>:</p>
+                <pre><code># Clave secreta para las sesiones de Flask (genera una nueva y segura)
+SECRET_KEY='una_clave_secreta_muy_larga_y_aleatoria_para_desarrollo'
+
+# Credenciales de Supabase para el registro de actividad
+SUPABASE_URL='https://tu-proyecto.supabase.co'
+SUPABASE_KEY='tu-api-key-de-supabase'
+
+# Credenciales de OAuth para el inicio de sesión con Google
+GOOGLE_CLIENT_ID='TU_ID_DE_CLIENTE_AQUI'
+GOOGLE_CLIENT_SECRET='TU_SECRETO_DE_CLIENTE_AQUI'
+</code></pre>
+                <div class="note">
+                    <strong>Importante:</strong> El archivo <code class="inline">.env</code> nunca debe ser subido al repositorio de Git. Asegúrate de que esté incluido en tu archivo <code class="inline">.gitignore</code>.
+                </div>
+            </section>
+
+            <section id="estructura">
+                <h2><i class="fa-solid fa-folder-tree"></i>3. Estructura del Proyecto</h2>
+                <p>La organización del código sigue las convenciones de una aplicación Flask estándar.</p>
+                <ul>
+                    <li><code class="inline">app.py</code>: El corazón de la aplicación. Contiene la inicialización de Flask, la definición de rutas (endpoints), la lógica de negocio y la autenticación.</li>
+                    <li><code class="inline">google_sheets_manager.py</code>: Capa de Acceso a Datos (DAL). Abstrae toda la comunicación con Google Sheets y Supabase. Es el único lugar donde se interactúa directamente con las bases de datos.</li>
+                    <li><code class="inline">pdf_generator.py</code>: Contiene la lógica para crear los certificados en formato PDF utilizando la librería FPDF2.</li>
+                    <li><code class="inline">templates/</code>: Carpeta que contiene todas las plantillas HTML (archivos <code class="inline">.html</code>). Utiliza el motor de plantillas Jinja2.</li>
+                    <li><code class="inline">static/</code>: Almacena archivos estáticos como CSS, JavaScript e imágenes.</li>
+                    <li><code class="inline">requirements.txt</code>: Lista de todas las dependencias de Python.</li>
+                    <li><code class="inline">.env</code>: Archivo (local) para almacenar variables de entorno y secretos.</li>
+                </ul>
+            </section>
+
+            <section id="flujo-datos">
+                <h2><i class="fa-solid fa-right-left"></i>4. Flujo de Datos</h2>
+                <p>El flujo de datos es un aspecto clave de la arquitectura.</p>
+                <ol>
+                    <li><strong>Inicio de la App:</strong> Al arrancar, <code class="inline">GoogleSheetManager</code> se inicializa y carga en memoria (cache) los datos de productos y especificaciones desde las hojas correspondientes de Google Sheets. Esto optimiza el rendimiento.</li>
+                    <li><strong>Solicitud del Usuario:</strong> Un usuario accede a una ruta (ej. <code class="inline">/</code>).</li>
+                    <li><strong>Controlador (<code class="inline">app.py</code>):</strong> La función de la ruta correspondiente en <code class="inline">app.py</code> se ejecuta.</li>
+                    <li><strong>Acceso a Datos:</strong> La función llama a un método en <code class="inline">data_manager</code> (la instancia de <code class="inline">GoogleSheetManager</code>) para obtener los datos necesarios (ej. <code class="inline">data_manager.get_all_records()</code>).</li>
+                    <li><strong>Renderizado de Plantilla:</strong> <code class="inline">app.py</code> pasa los datos obtenidos a una plantilla HTML usando <code class="inline">render_template()</code>.</li>
+                    <li><strong>Respuesta al Usuario:</strong> El servidor envía la página HTML renderizada al navegador del usuario.</li>
+                </ol>
+                <div class="note">
+                    <strong>Búsqueda Dinámica (AJAX):</strong> Para funcionalidades como la búsqueda en tiempo real, el frontend (JavaScript) realiza una solicitud <code class="inline">fetch</code> a la misma ruta, pero con una cabecera especial. El backend en <code class="inline">app.py</code> detecta esta cabecera y, en lugar de renderizar una página completa, devuelve solo los datos necesarios en formato JSON.
+                </div>
+            </section>
+
+            <section id="seguridad">
+                <h2><i class="fa-solid fa-shield-halved"></i>5. Seguridad</h2>
+                <p>Se han implementado varias medidas de seguridad:</p>
+                <ul>
+                    <li><strong>Autenticación y Roles:</strong> El acceso a las rutas está protegido. Se utilizan decoradores como <code class="inline">@admin_required</code> y <code class="inline">@supervisor_required</code> para restringir el acceso según el rol del usuario almacenado en la sesión.</li>
+                    <li><strong>Hashing de Contraseñas:</strong> Las contraseñas de los usuarios se almacenan hasheadas en Google Sheets usando <code class="inline">werkzeug.security.generate_password_hash</code>. Nunca se guardan en texto plano.</li>
+                    <li><strong>Limitación de Tasa (Rate Limiting):</strong> Se utiliza <code class="inline">Flask-Limiter</code> para prevenir ataques de fuerza bruta, especialmente en la página de login (3 intentos por minuto).</li>
+                    <li><strong>Variables de Entorno:</strong> Las credenciales y claves secretas se gestionan a través de un archivo <code class="inline">.env</code> y no se incluyen en el código fuente.</li>
+                </ul>
+            </section>
+
+            <section id="comandos">
+                <h2><i class="fa-solid fa-terminal"></i>6. Comandos CLI</h2>
+                <p>La aplicación incluye comandos personalizados que se pueden ejecutar desde la terminal.</p>
+                <h3><i class="fa-solid fa-key"></i>Migración de Contraseñas</h3>
+                <p>Este comando fue creado para migrar las contraseñas antiguas (en texto plano) a un formato hasheado seguro. Se puede ejecutar una vez para asegurar todas las cuentas.</p>
+                <pre><code>flask migrate-passwords</code></pre>
+                <div class="note">
+                    <strong>Nota:</strong> Este comando es idempotente. Si se ejecuta sobre contraseñas que ya están hasheadas, no hará nada.
+                </div>
+            </section>
+
+            <section id="despliegue">
+                <h2><i class="fa-solid fa-server"></i>7. Despliegue</h2>
+                <p>Para desplegar la aplicación en un servidor de producción, se recomienda no usar el servidor de desarrollo de Flask (<code class="inline">app.run()</code>).</p>
+                <h3><i class="fa-solid fa-play"></i>Usando un Servidor WSGI</h3>
+                <p>Se debe utilizar un servidor WSGI como <strong>Gunicorn</strong> o <strong>Waitress</strong> para servir la aplicación de manera robusta.</p>
+                <h4>Ejemplo con Waitress (Windows/Multiplataforma):</h4>
+                <pre><code># 1. Instalar Waitress
+pip install waitress
+
+# 2. Crear un archivo `run.py`
+# Contenido de run.py:
+# from app import app
+# from waitress import serve
+# if __name__ == "__main__":
+#     serve(app, host='0.0.0.0', port=8000)
+
+# 3. Ejecutar la aplicación
+python run.py</code></pre>
+                <h4>Ejemplo con Gunicorn (Linux/macOS):</h4>
+                <pre><code># 1. Instalar Gunicorn
+pip install gunicorn
+
+# 2. Ejecutar la aplicación (ej. con 4 workers)
+gunicorn --workers 4 --bind 0.0.0.0:8000 app:app</code></pre>
+                <div class="note">
+                    <strong>Variables de Entorno en Producción:</strong> En un entorno de producción, las variables de entorno (como <code class="inline">SECRET_KEY</code>, etc.) deben ser configuradas directamente en el sistema operativo o a través del panel de control del proveedor de hosting, no mediante un archivo <code class="inline">.env</code>.
+                </div>
+            </section>
+        </div>
+        
+        <footer>
+            <p>&copy; 2025 Coadix | Manual de Desarrollador.</p>
+        </footer>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const sections = document.querySelectorAll("section");
+            const navLinks = document.querySelectorAll("nav ul li a");
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const activeId = entry.target.id;
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').includes(activeId)) {
+                                link.classList.add('active');
+                                const parentLink = link.closest('ul').previousElementSibling;
+                                if(parentLink && parentLink.tagName === 'A') {
+                                    parentLink.classList.add('active');
+                                }
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: "-20% 0px -75% 0px" });
+
+            sections.forEach(section => { observer.observe(section); });
+        });
+    </script>
+</body>
+</html>

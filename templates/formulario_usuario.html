@@ -19,15 +19,15 @@
                 <div class="mb-3">
                     <label for="username" class="form-label">Nombre de usuario</label>
                     <input type="text" class="form-control" id="username" name="username" 
-                           pattern="[a-zA-Z\s]{3,40}" 
-                           oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '');"
-                           title="Solo se permiten letras y espacios. Entre 3 y 40 caracteres."
+                           pattern="[a-zA-Z0-9\s@._-]{3,60}"
+                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9\s@._-]/g, '');"
+                           title="Puede ser un nombre (Ej: Juan Perez) o un correo electrónico."
                            value="{{ user_data.USERNAME if is_edit_mode else '' }}" 
                            {% if is_edit_mode %}readonly{% endif %} required>
                     {% if is_edit_mode %}
                     <div class="form-text">El nombre de usuario no se puede cambiar.</div>
                     {% else %}
-                    <div class="form-text">Solo se permiten letras y espacios. Ej: Jonathan Cerda</div>
+                    <div class="form-text">Puede ser un nombre (Ej: Juan Perez) o un correo electrónico.</div>
                     {% endif %}
                 </div>
 
@@ -36,7 +36,7 @@
                     <input type="password" class="form-control" id="password" name="password" 
                            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{6,}$"
                            title="Mínimo 6 caracteres, al menos una mayúscula, una minúscula y un número"
-                           {% if not is_edit_mode %}required{% endif %}>
+                           >
                     {% if is_edit_mode %}
                     <div class="form-text">Dejar en blanco para no cambiar la contraseña.</div>
                     {% else %}

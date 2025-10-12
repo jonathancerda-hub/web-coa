@@ -30,12 +30,19 @@ class GoogleSheetManager:
         try:
             scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
             google_creds_json = os.getenv('GOOGLE_CREDS_JSON')
+            creds = None
+
             if google_creds_json:
-                creds_info = json.loads(google_creds_json)
-                creds = Credentials.from_service_account_info(creds_info, scopes=scopes)
-            else:
-                creds_path = resource_path('credentials.json')
+                try:
+                    creds_info = json.loads(google_creds_json)
+                    creds = Credentials.from_service_account_info(creds_info, scopes=scopes)
+                except json.JSONDecodeError:
+                    print("Advertencia: La variable de entorno GOOGLE_CREDS_JSON está mal formateada. Se intentará usar 'credentials.json'.")
+
+            if not creds:
+                creds_path = os.path.join(os.path.abspath("."), 'credentials.json')
                 creds = Credentials.from_service_account_file(creds_path, scopes=scopes)
+
             self.client = gspread.authorize(creds)
             self.spreadsheet = self.client.open('CertificadosDeAnalisis')
             self.worksheet = self.spreadsheet.sheet1
@@ -222,11 +229,31 @@ class GoogleSheetManager:
         return None
 
     def add_user(self, user_data):
-        if self.find_user(user_data[0]):
+        username = user_data[0]
+        if self.find_user(username):
             return False, "El nombre de usuario ya existe."
+        
         try:
+            # 1. Generar un nuevo ID y añadirlo a los datos del usuario
             users_sheet = self.spreadsheet.worksheet("Usuarios")
-            users_sheet.append_row(user_data, value_input_option='USER_ENTERED')
+            all_ids = users_sheet.col_values(1)[1:] # Omitir cabecera
+            numeric_ids = [int(i) for i in all_ids if i.isdigit()]
+            new_id = max(numeric_ids) + 1 if numeric_ids else 1
+            
+            # Datos completos con el nuevo ID
+            full_user_data = [new_id] + user_data
+
+            # 2. Añadir a Google Sheets
+            users_sheet.append_row(full_user_data, value_input_option='USER_ENTERED')
+
+            # 3. Añadir a Supabase
+            if self.supabase:
+                self.supabase.table('usuarios').insert({
+                    'id': new_id,
+                    'username': username,
+                    'rol': user_data[2] # El rol es el tercer elemento de user_data
+                }).execute()
+
             return True, "Usuario añadido con éxito."
         except Exception as e:
             return False, f"Error al añadir usuario: {e}"
@@ -234,7 +261,8 @@ class GoogleSheetManager:
     def update_user(self, username, new_data):
         try:
             users_sheet = self.spreadsheet.worksheet("Usuarios")
-            cell = users_sheet.find(username)
+            # Buscar en la columna de username (columna 2)
+            cell = users_sheet.find(username, in_column=2)
             if not cell: return False, "Usuario no encontrado."
             if 'ROL' in new_data:
                 users_sheet.update_cell(cell.row, 3, new_data['ROL'])
@@ -247,7 +275,8 @@ class GoogleSheetManager:
     def delete_user(self, username):
         try:
             users_sheet = self.spreadsheet.worksheet("Usuarios")
-            cell = users_sheet.find(username)
+            # Buscar en la columna de username (columna 2)
+            cell = users_sheet.find(username, in_column=2)
             if not cell: return False, "Usuario no encontrado para eliminar."
             users_sheet.delete_rows(cell.row)
             return True, "Usuario eliminado con éxito."
