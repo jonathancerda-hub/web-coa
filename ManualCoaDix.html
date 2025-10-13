@@ -230,7 +230,7 @@
     <main>
         <header>
             <h1>Manual de Usuario del Sistema Coadix</h1>
-            <p>Gestión de Certificados para Pharmadix y Agrovet</p>
+            <p>Gestión de Certificados para Pharmadix y AgrovetMarket</p>
         </header>
 
         <div class="content-wrapper">
@@ -317,6 +317,23 @@
                     <li>Una vez llenado el formulario, revisa que toda la información sea correcta.</li>
                     <li>Para finalizar, presiona el botón <strong>"Guardar Cambios"</strong>. El sistema confirmará que el certificado ha sido registrado exitosamente.</li>
                 </ol>
+                <h3><i class="fa-solid fa-circle-exclamation"></i>5.1.1. Validaciones de Campos</h3>
+                <p>El sistema realiza validaciones automáticas para asegurar la calidad y consistencia de los datos. Si un campo no cumple con el formato esperado, se resaltará en rojo y mostrará un mensaje explicativo al intentar guardar.</p>
+                <ul>
+                    <li><strong>Producto, Presentación, Forma Farmacéutica, Versión de Especificación:</strong> Se cargan automáticamente al seleccionar el producto.</li>
+                    <li><strong>Lote:</strong> Solo números enteros, máximo 12 dígitos. Permite ceros iniciales.</li>
+                    <li><strong>Cantidad:</strong> Número entero positivo, máximo 6 dígitos.</li>
+                    <li><strong>Fecha de Producción:</strong> Obligatoria.</li>
+                    <li><strong>Fecha de Vencimiento:</strong> Obligatoria y debe ser una fecha futura.</li>
+                    <li><strong>Fecha de Análisis:</strong> Obligatoria y no puede ser anterior a la fecha actual.</li>
+                    <li><strong>Fecha de Emisión:</strong> Obligatoria.</li>
+                    <li><strong>Laboratorio:</strong> Solo letras, números, espacios, puntos y guiones. Máximo 50 caracteres. Por defecto: PHARMADIX.</li>
+                    <li><strong>Referencia (Opcional):</strong> Letras, números, espacios, guiones, puntos, guiones bajos y paréntesis. Máximo 30 caracteres.</li>
+                    <li><strong>Ensayo, Especificaciones, Resultados:</strong> Campos de texto libre con validaciones básicas de caracteres permitidos.</li>
+                    <li><strong>Observaciones (Opcional):</strong> Campo de texto libre.</li>
+                    <li><strong>Conclusión:</strong> Seleccionable entre PENDIENTE, APROBADO o RECHAZADO.</li>
+                </ul>
+
                 <h3 id="edicion"><i class="fa-solid fa-pen-to-square"></i>5.2. Editar un Certificado Existente</h3>
                 <ol>
                     <li>En la página de "Registros", localiza el certificado que deseas modificar.</li>
@@ -354,7 +371,7 @@
                 <p>Si encuentras algún problema, tienes dudas sobre el funcionamiento del sistema o alguna sugerencia de mejora, no dudes en contactar a nuestro equipo de soporte:</p>
                 <ul>
                     <li><strong>Contacto Principal:</strong> Administrador del Sistema.</li>
-                     <li><strong>Correo Electrónico:</strong> <a href="mailto:jonathan.cerda@agrovet.com">jonathan.cerda@agrovetmarket.com</a></li>
+                     <li><strong>Correo Electrónico:</strong> <a href="mailto:jonathan.cerda@agrovet.com">odoo360@agrovetmarket.com</a></li>
                 </ul>
             </section>
         </div>
