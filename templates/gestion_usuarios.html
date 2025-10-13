@@ -48,7 +48,8 @@
                             </td>
                             <td class="text-center">
                                 <a href="{{ url_for('editar_usuario', username=user.USERNAME) }}" class="btn btn-warning btn-sm">Editar</a>
-                                <form action="{{ url_for('eliminar_usuario', username=user.USERNAME) }}" method="POST" style="display: inline-block;">
+                                <form action="{{ url_for('eliminar_usuario') }}" method="POST" style="display: inline-block;">
+                                    <input type="hidden" name="username" value="{{ user.USERNAME }}">
                                     <button type="submit" class="btn btn-danger btn-sm" 
                                             onclick="return confirm('¿Estás seguro de que quieres eliminar a este usuario? Esta acción no se puede deshacer.');">
                                         Eliminar

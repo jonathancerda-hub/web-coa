@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import os
 import json
+import re
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from functools import wraps
@@ -161,10 +162,14 @@ def logout():
 @app.route('/login/google')
 def login_google():
     """Redirige al usuario a la página de inicio de sesión de Google."""
-    # --- INICIO DE LA CORRECCIÓN DEFINITIVA ---
-    # Se fuerza el esquema a 'https' para asegurar que la URL de redirección
-    # coincida exactamente con la configurada en Google Cloud en producción.
-    redirect_uri = url_for('auth_google', _external=True, _scheme='https')
+    # --- INICIO DE LA CORRECCIÓN PARA ENTORNO DUAL ---
+    # Se detecta si la app corre en Render para forzar HTTPS.
+    # De lo contrario, se usa el esquema por defecto (HTTP para local).
+    if os.environ.get('RENDER'):
+        redirect_uri = url_for('auth_google', _external=True, _scheme='https')
+    else:
+        redirect_uri = url_for('auth_google', _external=True)
+    # --- FIN DE LA CORRECCIÓN ---
     return google.authorize_redirect(redirect_uri)
 
 @app.route('/login/google/callback')
@@ -406,6 +411,12 @@ def nuevo_usuario():
         if not all([username, role]):
             flash('El nombre de usuario y el rol son obligatorios.', 'warning')
             return redirect(url_for('nuevo_usuario'))
+
+        # Validación de formato de correo electrónico en el servidor
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_regex, username):
+            flash('El nombre de usuario debe ser una dirección de correo electrónico válida.', 'danger')
+            return redirect(url_for('nuevo_usuario'))
         
         # Hashear la contraseña solo si se proporciona una.
         password_to_save = generate_password_hash(password) if password else "N/A"
@@ -442,9 +453,10 @@ def editar_usuario(username):
         return redirect(url_for('gestion_usuarios'))
     return render_template('formulario_usuario.html', is_edit_mode=True, user_data=user)
 
-@app.route('/eliminar-usuario/<string:username>', methods=['POST'])
+@app.route('/eliminar-usuario', methods=['POST'])
 @admin_required
-def eliminar_usuario(username):
+def eliminar_usuario():
+    username = request.form.get('username')
     if username == session.get('username'):
         flash('No puedes eliminar tu propia cuenta mientras estás en sesión.', 'danger')
         return redirect(url_for('gestion_usuarios'))
@@ -499,9 +511,9 @@ def gestion_productos():
 @supervisor_required
 def nuevo_producto():
     if request.method == 'POST':
-        nombre = request.form.get('nombre')
-        forma = request.form.get('forma')
-        presentacion = request.form.get('presentacion')
+        nombre = request.form.get('nombre', '').upper()
+        forma = request.form.get('forma', '').upper()
+        presentacion = request.form.get('presentacion', '').upper()
         if not all([nombre, forma, presentacion]):
             flash('Todos los campos son obligatorios.', 'warning')
             return redirect(url_for('nuevo_producto'))

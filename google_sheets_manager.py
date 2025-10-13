@@ -273,10 +273,17 @@ class GoogleSheetManager:
             # Buscar en la columna de username (columna 2)
             cell = users_sheet.find(username, in_column=2)
             if not cell: return False, "Usuario no encontrado."
+            
+            user_id = users_sheet.cell(cell.row, 1).value
+
             if 'ROL' in new_data:
-                users_sheet.update_cell(cell.row, 3, new_data['ROL'])
+                users_sheet.update_cell(cell.row, 4, new_data['ROL']) # Columna D es la 4
+                if self.supabase and user_id:
+                    self.supabase.table('usuarios').update({'rol': new_data['ROL']}).eq('id', user_id).execute()
+
             if 'PASSWORD' in new_data:
-                users_sheet.update_cell(cell.row, 2, new_data['PASSWORD'])
+                users_sheet.update_cell(cell.row, 3, new_data['PASSWORD']) # Columna C es la 3
+
             return True, "Usuario actualizado con éxito."
         except Exception as e:
             return False, f"Error al actualizar usuario: {e}"
@@ -284,10 +291,12 @@ class GoogleSheetManager:
     def delete_user(self, username):
         try:
             users_sheet = self.spreadsheet.worksheet("Usuarios")
-            # Buscar en la columna de username (columna 2)
             cell = users_sheet.find(username, in_column=2)
             if not cell: return False, "Usuario no encontrado para eliminar."
+            user_id = users_sheet.cell(cell.row, 1).value
             users_sheet.delete_rows(cell.row)
+            if self.supabase and user_id:
+                self.supabase.table('usuarios').delete().eq('id', user_id).execute()
             return True, "Usuario eliminado con éxito."
         except Exception as e:
             return False, f"Error al eliminar usuario: {e}"
