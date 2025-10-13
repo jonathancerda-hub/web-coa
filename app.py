@@ -72,6 +72,11 @@ except Exception as e:
     print(f"Error Crítico al iniciar GoogleSheetManager: {e}")
     data_manager = None
 
+# --- Manejador de Errores Personalizado ---
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return render_template('429.html', error=e), 429
+
 # --- Decoradores de Seguridad para Roles ---
 def admin_required(f):
     @wraps(f)
@@ -255,7 +260,16 @@ def registros():
 
     # 2. Filtrar si hay un término de búsqueda
     if search_term:
-        filtered_records = [rec for rec in all_records if any(search_term in str(val).lower() for val in rec.values())]
+        # --- INICIO DE LA CORRECCIÓN ---
+        # Se divide el término de búsqueda por espacios para permitir filtros múltiples.
+        # Ej: "APROBADO AMOXICILINA" buscará registros que contengan ambas palabras.
+        search_parts = search_term.split()
+        filtered_records = [
+            rec for rec in all_records if all(
+                any(part in str(val).lower() for val in rec.values()) for part in search_parts
+            )
+        ]
+        # --- FIN DE LA CORRECCIÓN ---
     else:
         filtered_records = all_records
 

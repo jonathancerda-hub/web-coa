@@ -253,12 +253,22 @@
                 <ol>
                     <li>Abre tu navegador web e ingresa a la dirección web de Coadix.</li>
                     <li>Visualizarás la pantalla de inicio de sesión.</li>
-                    <li>Ingresa tu <code>usuario</code> en el campo correspondiente.</li>
-                    <li>Ingresa tu <code>contraseña</code> en el campo correspondiente.</li>
-                    <li>Haz clic en el botón <strong>"Ingresar"</strong> para acceder al panel principal.</li>
+                    <li>Tienes dos opciones para ingresar:
+                        <ul>
+                            <li><strong>Método Tradicional:</strong> Ingresa tu <code>correo electrónico</code> y <code>contraseña</code>, y haz clic en "Ingresar".</li>
+                            <li><strong>Método Recomendado:</strong> Haz clic en el botón <strong>"Iniciar sesión con Google"</strong>. Serás redirigido a Google para autenticarte de forma segura con tu cuenta corporativa.</li>
+                        </ul>
+                    </li>
                 </ol>
                  <div class="note">
-                    <strong>Seguridad:</strong> El sistema limita el número de intentos de inicio de sesión. Si excedes el límite, tu acceso se bloqueará temporalmente. Si has olvidado tu contraseña, contacta al administrador.
+                    <strong>Primer Inicio de Sesión con Google:</strong> Si es la primera vez que ingresas con tu cuenta de Google, el sistema creará automáticamente tu usuario con un rol de "Operario". Si necesitas un rol superior, contacta a un administrador.
+                </div>
+                <div class="note">
+                    <strong>Seguridad:</strong> 
+                    <ul>
+                        <li>El sistema limita el número de intentos de inicio de sesión tradicional. Si excedes el límite, tu acceso se bloqueará temporalmente.</li>
+                        <li>Si has olvidado tu contraseña, contacta al administrador para que la restablezca.</li>
+                    </ul>
                 </div>
             </section>
 
@@ -272,6 +282,9 @@
                     <li><strong>Resumen Mensual:</strong> Una tabla que desglosa los resultados por mes, permitiéndote hacer clic en una fila para ver los registros de ese mes específico.</li>
                     <li><strong>Gráfico de Tendencia:</strong> Un gráfico de líneas que muestra la evolución de certificados aprobados vs. rechazados a lo largo del año.</li>
                 </ul>
+                <div class="note">
+                    <strong>¡Funcionalidad Mejorada!</strong> Al hacer clic en las tarjetas de estadísticas (Aprobados, Rechazados, etc.), el sistema te llevará a la lista de registros aplicando automáticamente los filtros de producto y fecha que ya tenías seleccionados en el dashboard.
+                </div>
             </section>
 
             <section id="registros">
@@ -308,11 +321,14 @@
                 <ol>
                     <li>En la página de "Registros", localiza el certificado que deseas modificar.</li>
                     <li>En la fila del certificado, haz clic en el ícono de <strong>Editar</strong> <i class="fa-solid fa-pen-to-square"></i>.</li>
-                    <li>Se abrirá el formulario con la información del certificado precargada.</li>
-                    <li>Los "Datos del Producto" (producto, lote, etc.) estarán bloqueados para garantizar la integridad de los datos.</li>
-                    <li>Podrás modificar los resultados de los análisis, las fechas y la conclusión final.</li>
+                    <li>Se abrirá el formulario con la información del certificado precargada. Podrás modificar los resultados de los análisis, las fechas y la conclusión final.</li>
+                    <li>Los "Datos del Producto" (producto, lote, etc.) estarán bloqueados para garantizar la integridad de los datos una vez creado el certificado.</li>
                     <li>Una vez realizados los cambios, haz clic en <strong>"Guardar Cambios"</strong> para actualizar el registro.</li>
                 </ol>
+                <div class="note">
+                    <strong>Nota para Administradores:</strong> Los usuarios con rol de <strong>Administrador</strong> tienen la capacidad de editar certificados incluso si ya han sido concluidos (estado "APROBADO" o "RECHAZADO"). Para otros roles, los certificados finalizados estarán bloqueados.
+                </div>
+
             <section id="gestion-avanzada">
                 <h2><i class="fa-solid fa-cogs"></i>6. Gestión Avanzada</h2>
                 <p>Estas secciones solo son visibles para usuarios con los permisos adecuados.</p>

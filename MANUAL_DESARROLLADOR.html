@@ -189,6 +189,7 @@
                     <li><strong>Framework CSS:</strong> Bootstrap 5</li>
                     <li><strong>Generación de PDF:</strong> FPDF2 (pyfpdf)</li>
                     <li><strong>Limitación de Tasa:</strong> Flask-Limiter</li>
+                    <li><strong>Seguridad de Formularios:</strong> Flask-WTF (para protección CSRF)</li>
                 </ul>
             </section>
 
@@ -264,17 +265,38 @@ GOOGLE_CLIENT_SECRET='TU_SECRETO_DE_CLIENTE_AQUI'
                 <div class="note">
                     <strong>Búsqueda Dinámica (AJAX):</strong> Para funcionalidades como la búsqueda en tiempo real, el frontend (JavaScript) realiza una solicitud <code class="inline">fetch</code> a la misma ruta, pero con una cabecera especial. El backend en <code class="inline">app.py</code> detecta esta cabecera y, en lugar de renderizar una página completa, devuelve solo los datos necesarios en formato JSON.
                 </div>
+                <h3><i class="fa-solid fa-database"></i>Sincronización con Supabase</h3>
+                <p>La gestión de usuarios (crear, editar, eliminar) se sincroniza entre Google Sheets (fuente principal) y una tabla <code class="inline">usuarios</code> en Supabase. Esto se hace para mantener la consistencia y preparar el sistema para futuras migraciones.</p>
+                <ul>
+                    <li><strong>Creación:</strong> Al añadir un usuario, se inserta en ambas bases de datos.</li>
+                    <li><strong>Actualización:</strong> Al cambiar el rol de un usuario, se actualiza en ambas.</li>
+                    <li><strong>Eliminación:</strong> Al eliminar un usuario, se borra de ambas.</li>
+                </ul>
             </section>
 
             <section id="seguridad">
                 <h2><i class="fa-solid fa-shield-halved"></i>5. Seguridad</h2>
                 <p>Se han implementado varias medidas de seguridad:</p>
                 <ul>
+                    <li><strong>Protección CSRF (Cross-Site Request Forgery):</strong> Se utiliza <code class="inline">Flask-WTF</code> para proteger todos los formularios que modifican datos. Es obligatorio incluir <code class="inline">{{ csrf_token() }}</code> en cada formulario para que las solicitudes sean válidas.</li>
                     <li><strong>Autenticación y Roles:</strong> El acceso a las rutas está protegido. Se utilizan decoradores como <code class="inline">@admin_required</code> y <code class="inline">@supervisor_required</code> para restringir el acceso según el rol del usuario almacenado en la sesión.</li>
                     <li><strong>Hashing de Contraseñas:</strong> Las contraseñas de los usuarios se almacenan hasheadas en Google Sheets usando <code class="inline">werkzeug.security.generate_password_hash</code>. Nunca se guardan en texto plano.</li>
                     <li><strong>Limitación de Tasa (Rate Limiting):</strong> Se utiliza <code class="inline">Flask-Limiter</code> para prevenir ataques de fuerza bruta, especialmente en la página de login (3 intentos por minuto).</li>
                     <li><strong>Variables de Entorno:</strong> Las credenciales y claves secretas se gestionan a través de un archivo <code class="inline">.env</code> y no se incluyen en el código fuente.</li>
                 </ul>
+            </section>
+
+            <section id="autenticacion-google">
+                <h2><i class="fa-brands fa-google"></i>5.1. Autenticación con Google (OAuth 2.0)</h2>
+                <p>El sistema permite el inicio de sesión a través de cuentas de Google, utilizando el protocolo OAuth 2.0. Esto delega la autenticación a Google, aumentando la seguridad y la comodidad.</p>
+                <ol>
+                    <li>El usuario hace clic en "Iniciar sesión con Google".</li>
+                    <li>La aplicación redirige al usuario a la página de autenticación de Google.</li>
+                    <li>Tras un inicio de sesión exitoso, Google redirige al usuario de vuelta a la aplicación con un código de autorización.</li>
+                    <li>El backend (<code class="inline">app.py</code>) intercambia este código por un token de acceso y obtiene la información del usuario (correo electrónico).</li>
+                    <li><strong>Auto-registro:</strong> Si el correo pertenece a un dominio autorizado (ej. <code>@agrovetmarket.com</code>) y el usuario no existe, se crea automáticamente en la base de datos con un rol por defecto.</li>
+                    <li>Se inicia la sesión en Flask para el usuario verificado.</li>
+                </ol>
             </section>
 
             <section id="comandos">
@@ -321,12 +343,18 @@ gunicorn --workers 4 --bind 0.0.0.0:8000 app:app</code></pre>
                 <ol>
                     <li><strong>Comando de Construcción (Build Command):</strong> <code class="inline">pip install -r requirements.txt</code></li>
                     <li><strong>Comando de Inicio (Start Command):</strong> <code class="inline">gunicorn app:app</code></li>
-                    <li><strong>Variables de Entorno:</strong> Configura todas las variables del archivo <code class="inline">.env</code> en la sección "Environment" de tu servicio en Render.</li>
+                    <li><strong>Variables de Entorno:</strong> Configura todas las variables del archivo <code class="inline">.env</code> en la sección "Environment" de tu servicio en Render. Para <code class="inline">GOOGLE_CREDS_JSON</code>, copia y pega el contenido completo de tu archivo <code class="inline">credentials.json</code>.</li>
                 </ol>
                 <div class="note">
-                    <strong>¡Crítico para el Login con Google!</strong> Después de desplegar, Render te dará una URL pública (ej. <code>https://mi-app.onrender.com</code>). Debes ir a tu Google Cloud Console, a la configuración de tu ID de cliente de OAuth, y en <strong>"URIs de redireccionamiento autorizados"</strong>, añadir la nueva URL seguida de <code>/login/google/callback</code>. <br>
-                    Ejemplo: <code>https://mi-app.onrender.com/login/google/callback</code>.
+                    <strong>¡Crítico para el Login con Google!</strong> Después de desplegar, Render te dará una URL pública (ej. <code>https://mi-app.onrender.com</code>). Debes ir a tu Google Cloud Console, a la configuración de tu ID de cliente de OAuth, y en <strong>"URIs de redireccionamiento autorizados"</strong>, añadir las dos URLs siguientes:
+                    <ul>
+                        <li>Para producción: <code>https://tu-app.onrender.com/login/google/callback</code></li>
+                        <li>Para desarrollo local: <code>http://127.0.0.1:5000/login/google/callback</code></li>
+                    </ul>
                     <br>Si no haces esto, el inicio de sesión con Google fallará con un error <code>redirect_uri_mismatch</code>.
+                </div>
+                <div class="note">
+                    <strong>ProxyFix:</strong> El código en <code class="inline">app.py</code> incluye <code class="inline">ProxyFix</code>. Esto es esencial para que Flask genere URLs con <code>https://</code> correctamente cuando se ejecuta detrás del proxy de Render, evitando errores de redirección.
                 </div>
 
             </section>

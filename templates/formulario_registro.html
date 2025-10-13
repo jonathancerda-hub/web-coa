@@ -25,7 +25,7 @@
     }
     
     .invalid-feedback {
-        display: block;
+        /* Se oculta por defecto, se mostrará con la clase .was-validated */
         width: 100%;
         margin-top: 0.25rem;
         font-size: 0.875em;
@@ -58,7 +58,7 @@
     <a href="{{ url_for('registros') }}" class="btn btn-secondary">Volver a la Lista</a>
 </div>
 
-<form method="POST" id="mainForm" novalidate action="{% if is_edit_mode %}{{ url_for('editar_registro', codigo=record_data.get('CODIGO')) }}{% else %}{{ url_for('nuevo_registro') }}{% endif %}">
+<form method="POST" id="mainForm" class="needs-validation" novalidate action="{% if is_edit_mode %}{{ url_for('editar_registro', codigo=record_data.get('CODIGO')) }}{% else %}{{ url_for('nuevo_registro') }}{% endif %}">
     <fieldset {% if is_finalized %}disabled{% endif %}>
         
         <div class="card mb-4">
@@ -91,6 +91,9 @@
                                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12);"
                                title="Solo se permiten números enteros positivos, máximo 12 dígitos."
                                value="{{ record_data.get('LOTE', '') }}" required {% if is_edit_mode %}disabled{% endif %}>
+                        <div class="invalid-feedback">
+                            El lote debe contener solo números (máximo 12 dígitos).
+                        </div>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="VERSION_ESPECIFICACION" class="form-label">Versión de Especificación</label>
@@ -104,6 +107,9 @@
                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);"
                                    title="Solo se permiten números enteros positivos, máximo 6 dígitos."
                                    value="{{ record_data.get('CANTIDAD', '').split(' ')[0] }}" required {% if is_edit_mode %}disabled{% endif %}>
+                            <div class="invalid-feedback">
+                                La cantidad debe ser un número entero positivo (máximo 6 dígitos).
+                            </div>
                             <select class="form-select" name="UNIDAD_CANTIDAD" style="max-width: 80px;" {% if is_edit_mode %}disabled{% endif %}>
                                 <option {% if 'KG' in record_data.get('CANTIDAD', 'KG') %}selected{% endif %}>KG</option>
                                 <option {% if 'L' in record_data.get('CANTIDAD', 'L') %}selected{% endif %}>L</option>
@@ -121,18 +127,33 @@
                     <div class="col-md-3 mb-3">
                         <label>Fecha de Producción</label>
                         <input type="text" class="form-control datepicker" name="FECHA_PRODUCCION" value="{{ record_data.get('FECHA_PRODUCCION', '') }}" required placeholder="dd-mm-yyyy">
+                        <div class="invalid-feedback">
+                            La fecha de producción es obligatoria.
+                        </div>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label>Fecha de Vencimiento</label>
-                        <input type="text" class="form-control datepicker" name="FECHA_VENCIMIENTO" value="{{ record_data.get('FECHA_VENCIMIENTO', '') }}" required placeholder="dd-mm-yyyy">
+                        <input type="text" class="form-control datepicker" name="FECHA_VENCIMIENTO" 
+                               value="{{ record_data.get('FECHA_VENCIMIENTO', '') }}" 
+                               required 
+                               placeholder="dd-mm-yyyy">
+                        <div class="invalid-feedback">
+                            La fecha de vencimiento es obligatoria y debe ser una fecha futura.
+                        </div>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label>Fecha de Análisis</label>
                         <input type="text" class="form-control datepicker" name="FECHA_ANALISIS" value="{{ record_data.get('FECHA_ANALISIS', '') }}" required placeholder="dd-mm-yyyy">
+                        <div class="invalid-feedback">
+                            La fecha de análisis es obligatoria y no puede ser anterior a hoy.
+                        </div>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label>Fecha de Emisión</label>
                         <input type="text" class="form-control datepicker" name="FECHA_EMISION" value="{{ record_data.get('FECHA_EMISION', '') }}" required placeholder="dd-mm-yyyy">
+                        <div class="invalid-feedback">
+                            La fecha de emisión es obligatoria.
+                        </div>
                     </div>
                 </div>
                  <div class="row">
@@ -141,14 +162,20 @@
                         <input type="text" class="form-control" name="LABORATORIO" 
                                pattern="[A-Za-z0-9\s\-\.]{1,50}"
                                title="Solo letras, números, espacios, puntos y guiones. Máximo 50 caracteres"
-                               value="{{ record_data.get('LABORATORIO', 'Agrovet Market') }}" required>
+                               value="{{ record_data.get('LABORATORIO', 'PHARMADIX') }}" required>
+                        <div class="invalid-feedback">
+                            Formato inválido. Solo letras, números, espacios, puntos y guiones (máx 50).
+                        </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>Referencia (Opcional)</label>
                         <input type="text" class="form-control" name="REFERENCIA" 
-                               pattern="[A-Za-z0-9\s\-\._]{0,30}"
-                               title="Solo letras, números, espacios, guiones, puntos y guiones bajos. Máximo 30 caracteres"
+                               pattern="[A-Za-z0-9\s\-\._()]{0,30}"
+                               title="Solo letras, números, espacios y los símbolos: - . _ ( )"
                                value="{{ record_data.get('REFERENCIA', '') }}">
+                        <div class="invalid-feedback">
+                            Formato inválido. Solo se permiten letras, números, espacios y los símbolos: - . _ ( )
+                        </div>
                     </div>
                 </div>
             </div>
@@ -359,15 +386,7 @@
         const fEmis = this.querySelector('[name="FECHA_EMISION"]').value;
         // Solo aplicar validaciones estrictas de fechas si NO es modo edición
         if (!isEditMode) {
-            // Fecha de Producción: debe ser hoy
-            if (fProd) {
-                const fechaProd = parseFecha(fProd);
-                if (!fechaProd || fechaProd.getTime() !== hoy.getTime()) {
-                    isValid = false;
-                    this.querySelector('[name="FECHA_PRODUCCION"]').classList.add('is-invalid');
-                }
-            }
-            // Fecha de Vencimiento: debe ser posterior a hoy
+            // Fecha de Vencimiento: debe ser posterior a hoy (se mantiene)
             if (fVenc) {
                 const fechaVenc = parseFecha(fVenc);
                 if (!fechaVenc || fechaVenc.getTime() <= hoy.getTime()) {
@@ -375,20 +394,12 @@
                     this.querySelector('[name="FECHA_VENCIMIENTO"]').classList.add('is-invalid');
                 }
             }
-            // Fecha de Análisis: no puede ser anterior a hoy
+            // Fecha de Análisis: no puede ser anterior a hoy (se mantiene)
             if (fAnal) {
                 const fechaAnal = parseFecha(fAnal);
                 if (!fechaAnal || fechaAnal.getTime() < hoy.getTime()) {
                     isValid = false;
                     this.querySelector('[name="FECHA_ANALISIS"]').classList.add('is-invalid');
-                }
-            }
-            // Fecha de Emisión: no puede ser anterior a hoy
-            if (fEmis) {
-                const fechaEmis = parseFecha(fEmis);
-                if (!fechaEmis || fechaEmis.getTime() < hoy.getTime()) {
-                    isValid = false;
-                    this.querySelector('[name="FECHA_EMISION"]').classList.add('is-invalid');
                 }
             }
         }

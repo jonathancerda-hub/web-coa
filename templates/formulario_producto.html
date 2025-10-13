@@ -8,7 +8,7 @@
 
     <div class="card shadow-sm" style="max-width: 600px;">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('nuevo_producto') }}">
+            <form method="POST" action="{{ url_for('nuevo_producto') }}" class="needs-validation" novalidate>
                 
                 <div class="mb-3">
                     <label for="nombre" class="form-label">Nombre del Producto</label>
@@ -17,27 +17,33 @@
                            pattern="[A-Za-z0-9\s\-\.]{3,100}"
                            title="Solo letras, números, espacios, guiones y puntos. Entre 3 y 100 caracteres"
                            required>
-                    <div class="form-text">Ej: Amoxicilina 500mg (solo letras, números, espacios, guiones y puntos)</div>
+                    <div class="invalid-feedback">
+                        El nombre debe tener entre 3 y 100 caracteres (letras, números, espacios, guiones y puntos).
+                    </div>
                 </div>
 
                 <div class="mb-3">
                     <label for="forma" class="form-label">Forma Farmacéutica</label>
                     <input type="text" class="form-control" id="forma" name="forma" 
                            style="text-transform: uppercase;"
-                           pattern="[A-Za-z\s\-]{3,50}"
+                           pattern="[A-Za-z\s\-]{3,50}" 
                            title="Solo letras, espacios y guiones. Entre 3 y 50 caracteres"
                            required>
-                    <div class="form-text">Ej: Polvo Soluble, Solución Inyectable (solo letras y espacios)</div>
+                    <div class="invalid-feedback">
+                        La forma debe tener entre 3 y 50 caracteres (solo letras, espacios y guiones).
+                    </div>
                 </div>
                 
                 <div class="mb-3">
                     <label for="presentacion" class="form-label">Presentación</label>
                     <input type="text" class="form-control" id="presentacion" name="presentacion" 
                            style="text-transform: uppercase;"
-                           pattern="[A-Za-z0-9\s\-\.]{3,80}"
+                           pattern="[A-Za-z0-9\s\-\.]{3,80}" 
                            title="Solo letras, números, espacios, guiones y puntos. Entre 3 y 80 caracteres"
                            required>
-                     <div class="form-text">Ej: Caja de 100 sobres, Frasco 250mL</div>
+                     <div class="invalid-feedback">
+                        La presentación debe tener entre 3 y 80 caracteres (letras, números, espacios, guiones y puntos).
+                    </div>
                 </div>
 
                 <div class="d-flex justify-content-end">
@@ -49,4 +55,24 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Script de validación estándar de Bootstrap
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+            })
+    })()
+</script>
 {% endblock %}

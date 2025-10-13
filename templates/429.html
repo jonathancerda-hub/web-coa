@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Límite de Solicitudes Excedido - Coadix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body, html { height: 100%; margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; }
+        .container {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .card {
+            padding: 2rem 3rem;
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .icon {
+            font-size: 4rem;
+            color: #dc3545; /* Rojo para el error */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="icon mb-3">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <h1 class="display-5 fw-bold">Límite de Solicitudes Excedido</h1>
+            <p class="lead">
+                Has realizado demasiadas solicitudes en un corto período de tiempo.
+            </p>
+            <p class="text-muted">
+                Por favor, espera un momento antes de volver a intentarlo. Esta es una medida de seguridad para proteger el sistema.
+            </p>
+            <hr>
+            <p>
+                Si crees que esto es un error, por favor contacta al administrador.
+            </p>
+            <a href="{{ url_for('registros') }}" class="btn btn-primary mt-3">Volver al Inicio</a>
+        </div>
+    </div>
+</body>
+</html>
