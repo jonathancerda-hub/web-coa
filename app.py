@@ -261,26 +261,21 @@ def registros():
     all_records = [r for r in all_records if r['FECHA_DE_REGISTRO_DT'] is not None]
     # --- FIN DE LA CORRECCIÓN ---
 
-    # --- INICIO DE LA MODIFICACIÓN ---
-    # 1. Ordenar los registros por fecha de creación, de más reciente a más antiguo
-    try:
-        all_records.sort(
-            key=lambda r: r['FECHA_DE_REGISTRO_DT'],
-            reverse=True
-        )
-    except (ValueError, TypeError):
-        # Si hay un error en el formato de fecha, se mantiene el orden original.
-        flash('Advertencia: No se pudo ordenar por fecha debido a formatos inconsistentes.', 'warning')
+    # --- INICIO DE LA CORRECCIÓN ---
+    # Se invierte la lista de registros para que los más nuevos (los últimos de la hoja)
+    # aparezcan primero. Esto es más robusto que ordenar por fecha si hay formatos inconsistentes.
+    all_records.reverse()
+    # Se crea una copia para aplicar los filtros.
+    filtered_records = all_records[:]
+    # --- FIN DE LA CORRECCIÓN ---
 
-    # 2. Filtrar si hay un término de búsqueda
-    filtered_records = all_records
     if search_term:
         # --- INICIO DE LA CORRECCIÓN ---
         # Se divide el término de búsqueda por espacios para permitir filtros múltiples.
         # Ej: "APROBADO AMOXICILINA" buscará registros que contengan ambas palabras.
         search_parts = search_term.split()
         filtered_records = [
-            rec for rec in all_records if all(
+            rec for rec in filtered_records if all(
                 any(part in str(val).lower() for val in rec.values()) for part in search_parts
             )
         ]
