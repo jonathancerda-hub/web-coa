@@ -252,7 +252,7 @@
                 <h3><i class="fa-solid fa-right-to-bracket"></i>2.2. Pasos para Iniciar Sesión</h3>
                 <ol>
                     <li>Abre tu navegador web e ingresa a la dirección web de Coadix.</li>
-                    <li>Visualizarás la pantalla de inicio de sesión.</li>
+                    <li>Verás la pantalla de inicio de sesión.</li>
                     <li>Tienes dos opciones para ingresar:
                         <ul>
                             <li><strong>Método Tradicional:</strong> Ingresa tu <code>correo electrónico</code> y <code>contraseña</code>, y haz clic en "Ingresar".</li>
@@ -261,7 +261,7 @@
                     </li>
                 </ol>
                  <div class="note">
-                    <strong>Primer Inicio de Sesión con Google:</strong> Si es la primera vez que ingresas con tu cuenta de Google, el sistema creará automáticamente tu usuario con un rol de "Operario". Si necesitas un rol superior, contacta a un administrador.
+                    <strong>Primer Inicio de Sesión con Google:</strong> Si es la primera vez que ingresas con tu cuenta de Google, el sistema creará automáticamente tu usuario con un rol de "Operario". Si necesitas un rol superior (Supervisor o Administrador), contacta a un administrador para que lo actualice.
                 </div>
                 <div class="note">
                     <strong>Seguridad:</strong> 
@@ -277,13 +277,13 @@
                 <p>El Dashboard es la primera pantalla que verás después de iniciar sesión. Ofrece una vista general y analítica del estado de los certificados.</p>
                 <ul>
                     <li><strong>Filtros:</strong> Puedes filtrar los datos por <code>Producto</code> y por un <code>rango de fechas de registro</code>.</li>
-                    <li><strong>Tarjetas de Estadísticas:</strong> Muestran un resumen rápido del total de certificados, aprobados, rechazados y pendientes en el periodo seleccionado.</li>
-                    <li><strong>Gráfico de Distribución:</strong> Un gráfico de torta que muestra visualmente la proporción de cada estado (Aprobado, Rechazado, Pendiente).</li>
-                    <li><strong>Resumen Mensual:</strong> Una tabla que desglosa los resultados por mes, permitiéndote hacer clic en una fila para ver los registros de ese mes específico.</li>
+                    <li><strong>Tarjetas de Estadísticas (Interactivas):</strong> Muestran un resumen rápido del total de certificados, aprobados, rechazados y pendientes. Al hacer clic en una tarjeta, serás redirigido a la lista de registros con ese filtro aplicado.</li>
+                    <li><strong>Gráfico de Distribución (Interactivo):</strong> Un gráfico de torta que muestra visualmente la proporción de cada estado. Al hacer clic en una sección (ej. "Aprobados"), verás los registros correspondientes.</li>
+                    <li><strong>Resumen Mensual (Interactivo):</strong> Una tabla que desglosa los resultados por mes. Al hacer clic en una fila, verás los registros de ese mes específico.</li>
                     <li><strong>Gráfico de Tendencia:</strong> Un gráfico de líneas que muestra la evolución de certificados aprobados vs. rechazados a lo largo del año.</li>
                 </ul>
                 <div class="note">
-                    <strong>¡Funcionalidad Mejorada!</strong> Al hacer clic en las tarjetas de estadísticas (Aprobados, Rechazados, etc.), el sistema te llevará a la lista de registros aplicando automáticamente los filtros de producto y fecha que ya tenías seleccionados en el dashboard.
+                    <strong>Validación de Fechas:</strong> El sistema no te permitirá aplicar un filtro donde la fecha "Registro Hasta" sea anterior a la fecha "Registro Desde", evitando así consultas erróneas.
                 </div>
             </section>
 
@@ -321,10 +321,10 @@
                 <p>El sistema realiza validaciones automáticas para asegurar la calidad y consistencia de los datos. Si un campo no cumple con el formato esperado, se resaltará en rojo y mostrará un mensaje explicativo al intentar guardar.</p>
                 <ul>
                     <li><strong>Producto, Presentación, Forma Farmacéutica, Versión de Especificación:</strong> Se cargan automáticamente al seleccionar el producto.</li>
-                    <li><strong>Lote:</strong> Solo números enteros, máximo 12 dígitos. Permite ceros iniciales.</li>
-                    <li><strong>Cantidad:</strong> Número entero positivo, máximo 6 dígitos.</li>
+                    <li><strong>Lote:</strong> Solo números enteros, máximo 12 dígitos. No puede empezar con cero.</li>
+                    <li><strong>Cantidad:</strong> Número entero positivo, máximo 6 dígitos y no puede empezar con cero.</li>
                     <li><strong>Fecha de Producción:</strong> Obligatoria.</li>
-                    <li><strong>Fecha de Vencimiento:</strong> Obligatoria y debe ser una fecha futura.</li>
+                    <li><strong>Fecha de Vencimiento:</strong> Obligatoria.</li>
                     <li><strong>Fecha de Análisis:</strong> Obligatoria y no puede ser anterior a la fecha actual.</li>
                     <li><strong>Fecha de Emisión:</strong> Obligatoria.</li>
                     <li><strong>Laboratorio:</strong> Solo letras, números, espacios, puntos y guiones. Máximo 50 caracteres. Por defecto: PHARMADIX.</li>
@@ -350,7 +350,7 @@
                 <h2><i class="fa-solid fa-cogs"></i>6. Gestión Avanzada</h2>
                 <p>Estas secciones solo son visibles para usuarios con los permisos adecuados.</p>
                 <h3 id="gestion-usuarios"><i class="fa-solid fa-users-cog"></i>6.1. Gestión de Usuarios (Solo Administradores)</h3>
-                <p>Permite crear, editar y eliminar usuarios, así como asignarles roles (Administrador, Supervisor, Operario).</p>
+                <p>Permite crear, editar y eliminar usuarios, así como asignarles roles (Administrador, Supervisor, Operario). Si se intenta crear un usuario que ya existe, el sistema mostrará el error en la misma página sin perder los datos ingresados.</p>
                 <h3 id="gestion-productos"><i class="fa-solid fa-box-open"></i>6.2. Gestión de Productos (Supervisores y Admins)</h3>
                 <p>Permite añadir nuevas presentaciones a los productos existentes o eliminar las que ya no se utilicen.</p>
                 <h3 id="log-actividad"><i class="fa-solid fa-clipboard-list"></i>6.3. Log de Actividad (Solo Administradores)</h3>
@@ -360,8 +360,8 @@
             <section id="cierre">
                 <h2><i class="fa-solid fa-power-off"></i>7. Cierre de Sesión</h2>
                 <p>Para proteger tu cuenta y la información sensible del sistema, es fundamental que cierres tu sesión cuando termines de utilizarlo.</p>
-                 <ol>
-                    <li>Ubica el <strong>ícono de salida</strong> <i class="fa-solid fa-power-off"></i> en la esquina superior derecha de la pantalla.</li>
+                <ol>
+                    <li>Ubica tu nombre de usuario en la parte inferior de la barra de navegación izquierda.</li>
                     <li>Haz clic sobre él para cerrar tu sesión de forma segura.</li>
                 </ol>
             </section>

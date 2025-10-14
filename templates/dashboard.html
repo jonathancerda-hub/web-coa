@@ -1,4 +1,21 @@
 {% extends "base.html" %}
+
+{# --- INICIO DE LA CORRECCIÓN DEFINITIVA --- #}
+{# Se define search_params al principio del todo para que sea global a la plantilla. #}
+{% set search_params = {} %}
+{% if current_filters %}
+    {% if current_filters.producto and current_filters.producto != 'Todos los Productos' %}
+        {% set _ = search_params.update({'search': current_filters.producto}) %}
+    {% endif %}
+    {% if current_filters.fecha_inicio %}
+        {% set _ = search_params.update({'fecha_inicio': current_filters.fecha_inicio}) %}
+    {% endif %}
+    {% if current_filters.fecha_fin %}
+        {% set _ = search_params.update({'fecha_fin': current_filters.fecha_fin}) %}
+    {% endif %}
+{% endif %}
+{# --- FIN DE LA CORRECCIÓN DEFINITIVA --- #}
+
 {% block title %}Dashboard de Calidad{% endblock %}
 
 {% block content %}
@@ -11,7 +28,7 @@
         <i class="bi bi-funnel me-2"></i>Filtros
     </div>
     <div class="card-body">
-        <form method="GET" action="{{ url_for('dashboard') }}" class="row g-3 align-items-end">
+        <form method="GET" action="{{ url_for('dashboard') }}" id="filterForm" class="row g-3 align-items-end">
             <div class="col-md-4">
                 <label for="producto" class="form-label">Producto</label>
                 <select id="producto" name="producto" class="form-select">
@@ -43,19 +60,6 @@
 </div>
 
 {% if stats and stats.total > 0 %}
-
-<!-- INICIO DE LA CORRECCIÓN: Se preparan los parámetros para la URL de los registros -->
-{% set search_params = {} %}
-{% if current_filters.producto and current_filters.producto != 'Todos los Productos' %}
-    {% set _ = search_params.update({'search': current_filters.producto}) %}
-{% endif %}
-{% if current_filters.fecha_inicio %}
-    {% set _ = search_params.update({'fecha_inicio': current_filters.fecha_inicio}) %}
-{% endif %}
-{% if current_filters.fecha_fin %}
-    {% set _ = search_params.update({'fecha_fin': current_filters.fecha_fin}) %}
-{% endif %}
-<!-- FIN DE LA CORRECCIÓN -->
 
 <div class="row mb-4">
     {% set cards = [
@@ -112,11 +116,11 @@
                         <tbody>
                             {% for month in monthly_summary %}
                             
-                            <tr class="clickable-row" 
-                                data-href="{{ url_for('dashboard', 
-                                    producto=current_filters.producto, 
-                                    fecha_inicio=month.start_date_str, 
-                                    fecha_fin=month.end_date_str) }}"
+                            <tr class="clickable-row"
+                                {# --- INICIO DE LA MODIFICACIÓN --- #}
+                                {# Ahora redirige a la página de registros con los filtros de mes y producto aplicados. #}
+                                data-href="{{ url_for('registros', search=(current_filters.producto if current_filters.producto != 'Todos los Productos' else ''), fecha_inicio=month.start_date_str, fecha_fin=month.end_date_str) }}"
+                                {# --- FIN DE LA MODIFICACIÓN --- #}
                                 title="Haz clic para ver los registros de {{ month.mes }}">
                                 <td>{{ month.mes }}</td>
                                 <td class="text-center fw-bold" style="color: #008080;">{{ month.aprobado }}</td>
@@ -210,6 +214,32 @@ if (canvasElement) {
                     }
                 }
             }
+        },
+        // --- INICIO DE LA MODIFICACIÓN: Hacer el gráfico clickeable ---
+        plugins: [{
+            id: 'custom_canvas_background_color',
+            beforeDraw: (chart) => {
+                const ctx = chart.canvas.getContext('2d');
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-over';
+                ctx.fillStyle = 'white'; // o el color de fondo que prefieras
+                ctx.fillRect(0, 0, chart.width, chart.height);
+                ctx.restore();
+            }
+        }],
+        onClick: (event, elements) => {
+            if (elements.length > 0) {
+                const i = elements[0].index;
+                const status = chartLabels[i];
+                // --- INICIO DE LA CORRECCIÓN ---
+                // Se simplifica la construcción de la URL para que sea más robusta.
+                // Se pasan los parámetros directamente a url_for y se añade el status dinámicamente.
+                let url = new URL("{{ url_for('registros', search=search_params.get('search', ''), fecha_inicio=search_params.get('fecha_inicio', ''), fecha_fin=search_params.get('fecha_fin', ''), _external=True) }}");
+                let currentSearch = url.searchParams.get('search') || '';
+                url.searchParams.set('search', (currentSearch + ' ' + status).trim());
+                window.location.href = url.toString();
+                // --- FIN DE LA CORRECCIÓN ---
+            }
         }
     });
 }
@@ -274,6 +304,29 @@ document.querySelectorAll('.clickable-row').forEach(row => {
     row.addEventListener('click', () => {
         window.location.href = row.dataset.href;
     });
+});
+
+// --- INICIO DE LA NUEVA VALIDACIÓN DE FECHAS ---
+document.getElementById('filterForm').addEventListener('submit', function(event) {
+    const fechaInicioInput = document.getElementById('fecha_inicio');
+    const fechaFinInput = document.getElementById('fecha_fin');
+
+    // Solo validar si ambos campos tienen valor
+    if (fechaInicioInput.value && fechaFinInput.value) {
+        // Flatpickr usa el formato d-m-Y, lo convertimos a un objeto Date para comparar
+        const [d1, m1, y1] = fechaInicioInput.value.split('-').map(Number);
+        const fechaInicio = new Date(y1, m1 - 1, d1);
+
+        const [d2, m2, y2] = fechaFinInput.value.split('-').map(Number);
+        const fechaFin = new Date(y2, m2 - 1, d2);
+
+        if (fechaFin < fechaInicio) {
+            // Prevenir el envío del formulario
+            event.preventDefault();
+            // Mostrar una alerta al usuario
+            alert('Error: La fecha "Registro Hasta" no puede ser anterior a la fecha "Registro Desde".');
+        }
+    }
 });
 </script>
 {% endblock %}

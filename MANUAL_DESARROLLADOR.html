@@ -188,8 +188,6 @@
                     <li><strong>Frontend:</strong> HTML, CSS, JavaScript (con plantillas Jinja2)</li>
                     <li><strong>Framework CSS:</strong> Bootstrap 5</li>
                     <li><strong>Generación de PDF:</strong> FPDF2 (pyfpdf)</li>
-                    <li><strong>Limitación de Tasa:</strong> Flask-Limiter</li>
-                    <li><strong>Seguridad de Formularios:</strong> Flask-WTF (para protección CSRF)</li>
                 </ul>
             </section>
 
@@ -274,18 +272,6 @@ GOOGLE_CLIENT_SECRET='TU_SECRETO_DE_CLIENTE_AQUI'
                 </ul>
             </section>
 
-            <section id="seguridad">
-                <h2><i class="fa-solid fa-shield-halved"></i>5. Seguridad</h2>
-                <p>Se han implementado varias medidas de seguridad:</p>
-                <ul>
-                    <li><strong>Protección CSRF (Cross-Site Request Forgery):</strong> Se utiliza <code class="inline">Flask-WTF</code> para proteger todos los formularios que modifican datos. Es obligatorio incluir <code class="inline">{{ csrf_token() }}</code> en cada formulario para que las solicitudes sean válidas.</li>
-                    <li><strong>Autenticación y Roles:</strong> El acceso a las rutas está protegido. Se utilizan decoradores como <code class="inline">@admin_required</code> y <code class="inline">@supervisor_required</code> para restringir el acceso según el rol del usuario almacenado en la sesión.</li>
-                    <li><strong>Hashing de Contraseñas:</strong> Las contraseñas de los usuarios se almacenan hasheadas en Google Sheets usando <code class="inline">werkzeug.security.generate_password_hash</code>. Nunca se guardan en texto plano.</li>
-                    <li><strong>Limitación de Tasa (Rate Limiting):</strong> Se utiliza <code class="inline">Flask-Limiter</code> para prevenir ataques de fuerza bruta, especialmente en la página de login (3 intentos por minuto).</li>
-                    <li><strong>Variables de Entorno:</strong> Las credenciales y claves secretas se gestionan a través de un archivo <code class="inline">.env</code> y no se incluyen en el código fuente.</li>
-                </ul>
-            </section>
-
             <section id="autenticacion-google">
                 <h2><i class="fa-brands fa-google"></i>5.1. Autenticación con Google (OAuth 2.0)</h2>
                 <p>El sistema permite el inicio de sesión a través de cuentas de Google, utilizando el protocolo OAuth 2.0. Esto delega la autenticación a Google, aumentando la seguridad y la comodidad.</p>
@@ -298,6 +284,20 @@ GOOGLE_CLIENT_SECRET='TU_SECRETO_DE_CLIENTE_AQUI'
                     <li>Se inicia la sesión en Flask para el usuario verificado.</li>
                 </ol>
             </section>
+
+            <section id="seguridad">
+                <h2><i class="fa-solid fa-shield-halved"></i>5. Seguridad</h2>
+                <p>Se han implementado varias medidas de seguridad:</p>
+                <ul>
+                    <li><strong>Autenticación y Roles:</strong> El acceso a las rutas está protegido. Se utilizan decoradores como <code class="inline">@admin_required</code> y <code class="inline">@supervisor_required</code> para restringir el acceso según el rol del usuario almacenado en la sesión.</li>
+                    <li><strong>Hashing de Contraseñas:</strong> Las contraseñas de los usuarios se almacenan hasheadas en Google Sheets usando <code class="inline">werkzeug.security.generate_password_hash</code>. Nunca se guardan en texto plano.</li>
+                    <li><strong>Limitación de Tasa (Rate Limiting):</strong> Se utiliza <code class="inline">Flask-Limiter</code> para prevenir ataques de fuerza bruta, especialmente en la página de login (3 intentos por minuto).</li>
+                    <li><strong>Variables de Entorno:</strong> Las credenciales y claves secretas se gestionan a través de un archivo <code class="inline">.env</code> y no se incluyen en el código fuente.</li>
+                    <li><strong>Validaciones en Frontend y Backend:</strong> Los formularios tienen validaciones tanto en el lado del cliente (HTML5, JavaScript) para una respuesta rápida, como en el lado del servidor (Python) como medida de seguridad final.</li>
+                    <li><strong>ProxyFix:</strong> El código en <code class="inline">app.py</code> incluye <code class="inline">ProxyFix</code>. Esto es esencial para que Flask genere URLs con <code>https://</code> correctamente cuando se ejecuta detrás de un proxy (como en Render), evitando errores de redirección y de seguridad.</li>
+                </ul>
+            </section>
+
 
             <section id="comandos">
                 <h2><i class="fa-solid fa-terminal"></i>6. Comandos CLI</h2>
@@ -352,9 +352,6 @@ gunicorn --workers 4 --bind 0.0.0.0:8000 app:app</code></pre>
                         <li>Para desarrollo local: <code>http://127.0.0.1:5000/login/google/callback</code></li>
                     </ul>
                     <br>Si no haces esto, el inicio de sesión con Google fallará con un error <code>redirect_uri_mismatch</code>.
-                </div>
-                <div class="note">
-                    <strong>ProxyFix:</strong> El código en <code class="inline">app.py</code> incluye <code class="inline">ProxyFix</code>. Esto es esencial para que Flask genere URLs con <code>https://</code> correctamente cuando se ejecuta detrás del proxy de Render, evitando errores de redirección.
                 </div>
 
             </section>
