@@ -242,16 +242,30 @@ def registros():
         return "Error: No se pudo conectar con el gestor de datos.", 500
     
     search_term = request.args.get('search', '').lower()
+    fecha_inicio_str = request.args.get('fecha_inicio', '')
+    fecha_fin_str = request.args.get('fecha_fin', '')
     page = request.args.get('page', 1, type=int)
     per_page = 20
 
     all_records = data_manager.get_all_records()
 
+    # --- INICIO DE LA CORRECCIÓN: Convertir fechas de registro a objetos datetime ---
+    # Esto es necesario para poder filtrar por rango de fechas.
+    for record in all_records:
+        try:
+            record['FECHA_DE_REGISTRO_DT'] = datetime.strptime(record.get('FECHA_DE_REGISTRO', ''), '%d-%m-%Y %H:%M:%S')
+        except (ValueError, TypeError):
+            record['FECHA_DE_REGISTRO_DT'] = None
+    
+    # Se eliminan los registros que no tienen una fecha válida para evitar errores.
+    all_records = [r for r in all_records if r['FECHA_DE_REGISTRO_DT'] is not None]
+    # --- FIN DE LA CORRECCIÓN ---
+
     # --- INICIO DE LA MODIFICACIÓN ---
     # 1. Ordenar los registros por fecha de creación, de más reciente a más antiguo
     try:
         all_records.sort(
-            key=lambda r: datetime.strptime(r.get('FECHA_DE_REGISTRO', '01-01-1900 00:00:00'), '%d-%m-%Y %H:%M:%S'),
+            key=lambda r: r['FECHA_DE_REGISTRO_DT'],
             reverse=True
         )
     except (ValueError, TypeError):
@@ -259,6 +273,7 @@ def registros():
         flash('Advertencia: No se pudo ordenar por fecha debido a formatos inconsistentes.', 'warning')
 
     # 2. Filtrar si hay un término de búsqueda
+    filtered_records = all_records
     if search_term:
         # --- INICIO DE LA CORRECCIÓN ---
         # Se divide el término de búsqueda por espacios para permitir filtros múltiples.
@@ -270,8 +285,18 @@ def registros():
             )
         ]
         # --- FIN DE LA CORRECCIÓN ---
-    else:
-        filtered_records = all_records
+    
+    # --- INICIO DE LA CORRECCIÓN: Filtrado por rango de fechas ---
+    if fecha_inicio_str:
+        fecha_inicio = pd.to_datetime(fecha_inicio_str, dayfirst=True, errors='coerce')
+        if pd.notna(fecha_inicio):
+            filtered_records = [r for r in filtered_records if r['FECHA_DE_REGISTRO_DT'].date() >= fecha_inicio.date()]
+    
+    if fecha_fin_str:
+        fecha_fin = pd.to_datetime(fecha_fin_str, dayfirst=True, errors='coerce')
+        if pd.notna(fecha_fin):
+            filtered_records = [r for r in filtered_records if r['FECHA_DE_REGISTRO_DT'].date() <= fecha_fin.date()]
+    # --- FIN DE LA CORRECCIÓN ---
 
     # 3. Aplicar paginación a los registros (ya filtrados si es el caso)
     total_records = len(filtered_records)
@@ -286,14 +311,16 @@ def registros():
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({
             'table_html': render_template('_registros_table_rows.html', records=paginated_records),
-            'pagination_html': render_template('_pagination.html', current_page=page, total_pages=total_pages, search_term=search_term)
+            'pagination_html': render_template('_pagination.html', current_page=page, total_pages=total_pages, search_term=search_term, fecha_inicio=fecha_inicio_str, fecha_fin=fecha_fin_str)
         })
     # --- FIN DE LA NUEVA LÓGICA ---
 
     # Si es una carga de página normal, renderizamos la plantilla completa.
     return render_template('registros.html', 
                            records=paginated_records, 
-                           search_term=search_term, 
+                           search_term=search_term,
+                           fecha_inicio=fecha_inicio_str,
+                           fecha_fin=fecha_fin_str,
                            current_page=page, 
                            total_pages=total_pages)
 
@@ -430,7 +457,10 @@ def nuevo_usuario():
         email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_regex, username):
             flash('El nombre de usuario debe ser una dirección de correo electrónico válida.', 'danger')
-            return redirect(url_for('nuevo_usuario'))
+            # --- INICIO DE LA CORRECCIÓN ---
+            # Renderizar directamente para no perder los datos y mostrar el flash en la página correcta.
+            return render_template('formulario_usuario.html', is_edit_mode=False, user_data={'USERNAME': username, 'ROL': role})
+            # --- FIN DE LA CORRECCIÓN ---
         
         # Hashear la contraseña solo si se proporciona una.
         password_to_save = generate_password_hash(password) if password else "N/A"
@@ -441,9 +471,14 @@ def nuevo_usuario():
             flash(message, 'success')
             return redirect(url_for('gestion_usuarios'))
         else:
-            flash(message, 'danger')
-            return redirect(url_for('nuevo_usuario'))
-    return render_template('formulario_usuario.html', is_edit_mode=False)
+            # --- INICIO DE LA CORRECCIÓN ---
+            # Pasamos el error directamente a la plantilla en lugar de usar flash().
+            # Esto asegura que el mensaje se muestre inmediatamente en la misma página.
+            return render_template('formulario_usuario.html', is_edit_mode=False, user_data={'USERNAME': username, 'ROL': role}, error_message=message)
+            # --- FIN DE LA CORRECCIÓN ---
+    # --- INICIO DE LA CORRECCIÓN ---
+    return render_template('formulario_usuario.html', is_edit_mode=False, user_data={})
+    # --- FIN DE LA CORRECCIÓN ---
 
 @app.route('/editar-usuario/<string:username>', methods=['GET', 'POST'])
 @admin_required
@@ -541,7 +576,11 @@ def nuevo_producto():
         else:
             flash(message, 'danger')
             return redirect(url_for('nuevo_producto'))
-    return render_template('formulario_producto.html')
+    # --- INICIO DE LA MODIFICACIÓN ---
+    # Obtenemos la lista de presentaciones únicas y la pasamos a la plantilla.
+    unique_presentations = data_manager.get_unique_presentations()
+    return render_template('formulario_producto.html', presentations=unique_presentations)
+    # --- FIN DE LA MODIFICACIÓN ---
 
 @app.route('/eliminar-presentacion/<path:product_name>/<path:presentation>', methods=['POST'])
 @supervisor_required
@@ -707,4 +746,4 @@ def migrate_passwords_command():
         print(f"Ocurrió un error durante la migración: {e}")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)

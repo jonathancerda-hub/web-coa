@@ -44,26 +44,25 @@
 
 {% if stats and stats.total > 0 %}
 
-<!-- INICIO DE LA CORRECCIÓN: Lógica para construir la base de la búsqueda -->
-{% set search_parts = [] %}
+<!-- INICIO DE LA CORRECCIÓN: Se preparan los parámetros para la URL de los registros -->
+{% set search_params = {} %}
 {% if current_filters.producto and current_filters.producto != 'Todos los Productos' %}
-    {% set _ = search_parts.append(current_filters.producto) %}
+    {% set _ = search_params.update({'search': current_filters.producto}) %}
 {% endif %}
 {% if current_filters.fecha_inicio %}
-    {% set _ = search_parts.append(current_filters.fecha_inicio) %}
+    {% set _ = search_params.update({'fecha_inicio': current_filters.fecha_inicio}) %}
 {% endif %}
 {% if current_filters.fecha_fin %}
-    {% set _ = search_parts.append(current_filters.fecha_fin) %}
+    {% set _ = search_params.update({'fecha_fin': current_filters.fecha_fin}) %}
 {% endif %}
-{% set search_base = search_parts|join(' ') %}
 <!-- FIN DE LA CORRECCIÓN -->
 
 <div class="row mb-4">
     {% set cards = [
-        {'title': 'Total en Periodo', 'value': stats.total, 'color': '#343a40', 'icon': 'bi-bar-chart-line-fill', 'link': url_for('registros', search=search_base)},
-        {'title': 'Aprobados', 'value': stats.aprobados, 'color': '#008080', 'icon': 'bi-check2-circle', 'link': url_for('registros', search='APROBADO ' + search_base)},
-        {'title': 'Rechazados', 'value': stats.rechazados, 'color': '#C0392B', 'icon': 'bi-x-octagon-fill', 'link': url_for('registros', search='RECHAZADO ' + search_base)},
-        {'title': 'Pendientes', 'value': stats.pendientes, 'color': '#F39C12', 'icon': 'bi-hourglass-split', 'link': url_for('registros', search='PENDIENTE ' + search_base)}
+        {'title': 'Total en Periodo', 'value': stats.total, 'color': '#343a40', 'icon': 'bi-bar-chart-line-fill', 'link': url_for('registros', **search_params)},
+        {'title': 'Aprobados', 'value': stats.aprobados, 'color': '#008080', 'icon': 'bi-check2-circle', 'link': url_for('registros', search=(search_params.get('search', '') + ' APROBADO').strip(), fecha_inicio=search_params.get('fecha_inicio'), fecha_fin=search_params.get('fecha_fin'))},
+        {'title': 'Rechazados', 'value': stats.rechazados, 'color': '#C0392B', 'icon': 'bi-x-octagon-fill', 'link': url_for('registros', search=(search_params.get('search', '') + ' RECHAZADO').strip(), fecha_inicio=search_params.get('fecha_inicio'), fecha_fin=search_params.get('fecha_fin'))},
+        {'title': 'Pendientes', 'value': stats.pendientes, 'color': '#F39C12', 'icon': 'bi-hourglass-split', 'link': url_for('registros', search=(search_params.get('search', '') + ' PENDIENTE').strip(), fecha_inicio=search_params.get('fecha_inicio'), fecha_fin=search_params.get('fecha_fin'))}
     ] %}
     {% for card in cards %}
     <div class="col-xl-3 col-md-6 mb-4">

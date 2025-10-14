@@ -12,15 +12,22 @@
         {% endif %}
     </h2>
 
+    <!-- INICIO DE LA CORRECCIÓN: Bloque para mostrar el error específico -->
+    {% if error_message %}
+    <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+    <!-- FIN DE LA CORRECCIÓN -->
     <div class="card shadow-sm" style="max-width: 600px;">
         <div class="card-body">
-            <form method="POST" action="">
+            <form method="POST" action="{% if is_edit_mode %}{{ url_for('editar_usuario', username=user_data.USERNAME) }}{% else %}{{ url_for('nuevo_usuario') }}{% endif %}">
                 <div class="mb-3">
                     <label for="username" class="form-label">Nombre de usuario (Correo Electrónico)</label>
                     <input type="email" class="form-control" id="username" name="username"
                            title="Ingrese una dirección de correo electrónico válida."
                            placeholder="ejemplo@dominio.com"
-                           value="{{ user_data.USERNAME if is_edit_mode else '' }}" 
+                           value="{{ user_data.USERNAME if user_data else '' }}" 
                            {% if is_edit_mode %}readonly{% endif %} required>
                     {% if is_edit_mode %}
                     <div class="form-text">El nombre de usuario no se puede cambiar.</div>
@@ -45,9 +52,9 @@
                 <div class="mb-3">
                     <label for="role" class="form-label">Rol</label>
                     <select class="form-select" id="role" name="role" required>
-                        <option value="Operario" {% if is_edit_mode and user_data.ROL == 'Operario' %}selected{% endif %}>Operario</option>
-                        <option value="Supervisor" {% if is_edit_mode and user_data.ROL == 'Supervisor' %}selected{% endif %}>Supervisor</option>
-                        <option value="Administrador" {% if is_edit_mode and user_data.ROL == 'Administrador' %}selected{% endif %}>Administrador</option>
+                        <option value="Operario" {% if user_data and user_data.ROL == 'Operario' %}selected{% endif %}>Operario</option>
+                        <option value="Supervisor" {% if user_data and user_data.ROL == 'Supervisor' %}selected{% endif %}>Supervisor</option>
+                        <option value="Administrador" {% if user_data and user_data.ROL == 'Administrador' %}selected{% endif %}>Administrador</option>
                     </select>
                 </div>
 

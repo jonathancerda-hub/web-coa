@@ -3,7 +3,7 @@
 <nav aria-label="Navegación de páginas" class="mt-4 d-flex justify-content-center">
     <ul class="pagination">
         <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for(endpoint_name, page=current_page - 1, search=search_term) }}">Anterior</a>
+            <a class="page-link" href="{{ url_for(endpoint_name, page=current_page - 1, search=search_term, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}">Anterior</a>
         </li>
 
         {# Lógica para paginación inteligente #}
@@ -17,7 +17,7 @@
                 {% if p == current_page %}
                     <li class="page-item active" aria-current="page"><span class="page-link">{{ p }}</span></li>
                 {% else %}
-                    <li class="page-item"><a class="page-link" href="{{ url_for(endpoint_name, page=p, search=search_term) }}">{{ p }}</a></li>
+                    <li class="page-item"><a class="page-link" href="{{ url_for(endpoint_name, page=p, search=search_term, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}">{{ p }}</a></li>
                 {% endif %}
             {% elif loop.previtem and (loop.previtem > current_page + window or loop.previtem < current_page - window) %}
                 {# No hacer nada si ya se imprimió un separador #}
@@ -27,7 +27,7 @@
         {% endfor %}
 
         <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for(endpoint_name, page=current_page + 1, search=search_term) }}">Siguiente</a>
+            <a class="page-link" href="{{ url_for(endpoint_name, page=current_page + 1, search=search_term, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}">Siguiente</a>
         </li>
     </ul>
 </nav>

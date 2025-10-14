@@ -36,14 +36,21 @@
                 
                 <div class="mb-3">
                     <label for="presentacion" class="form-label">Presentación</label>
-                    <input type="text" class="form-control" id="presentacion" name="presentacion" 
+                    <!-- INICIO DE LA MODIFICACIÓN: Cambiado a input con datalist -->
+                    <input type="text" class="form-control" id="presentacion" name="presentacion" list="presentaciones-list"
                            style="text-transform: uppercase;"
-                           pattern="[A-Za-z0-9\s\-\.]{3,80}" 
-                           title="Solo letras, números, espacios, guiones y puntos. Entre 3 y 80 caracteres"
+                           pattern="[A-Za-z0-9\s\-\.:]{3,80}" 
+                           title="Solo letras, números, espacios, guiones, puntos y dos puntos. Entre 3 y 80 caracteres"
                            required>
+                    <datalist id="presentaciones-list">
+                        {% for p in presentations %}
+                        <option value="{{ p }}">
+                        {% endfor %}
+                    </datalist>
                      <div class="invalid-feedback">
-                        La presentación debe tener entre 3 y 80 caracteres (letras, números, espacios, guiones y puntos).
+                        La presentación debe tener entre 3 y 80 caracteres (letras, números, espacios, guiones, puntos y dos puntos).
                     </div>
+                    <!-- FIN DE LA MODIFICACIÓN -->
                 </div>
 
                 <div class="d-flex justify-content-end">

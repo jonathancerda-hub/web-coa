@@ -158,6 +158,19 @@ class GoogleSheetManager:
                 })
         return flat_list
 
+    def get_unique_presentations(self):
+        """
+        Obtiene una lista única y ordenada de todas las presentaciones de todos los productos.
+        Utiliza los datos cacheados en self.product_data para ser eficiente.
+        """
+        all_presentations = set()
+        if not self.product_data:
+            return []
+        for product_info in self.product_data.values():
+            for presentation in product_info.get('presentaciones', []):
+                all_presentations.add(presentation)
+        return sorted(list(all_presentations))
+
     def add_product_presentation(self, product_data):
         try:
             product_sheet = self.spreadsheet.worksheet("Productos")

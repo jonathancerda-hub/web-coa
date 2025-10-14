@@ -59,7 +59,7 @@
 </div>
 
 <form method="POST" id="mainForm" class="needs-validation" novalidate action="{% if is_edit_mode %}{{ url_for('editar_registro', codigo=record_data.get('CODIGO')) }}{% else %}{{ url_for('nuevo_registro') }}{% endif %}">
-    <fieldset {% if is_finalized %}disabled{% endif %}>
+    <fieldset {% if is_finalized and session.get('role') != 'Administrador' %}disabled{% endif %}>
         
         <div class="card mb-4">
             <div class="card-header"><h5>Datos del Producto</h5></div>
@@ -98,17 +98,20 @@
                     <div class="col-md-4 mb-3">
                         <label for="VERSION_ESPECIFICACION" class="form-label">Versión de Especificación</label>
                         <select class="form-select" id="VERSION_ESPECIFICACION" name="VERSION_ESPECIFICACION" required disabled></select>
+                        <div class="invalid-feedback">
+                            Debe seleccionar una versión para cargar las especificaciones.
+                        </div>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="CANTIDAD" class="form-label">Cantidad</label>
                         <div class="input-group">
-                            <input type="number" step="1" min="1" max="999999" class="form-control" id="CANTIDAD" name="CANTIDAD"
-                                   pattern="\d{1,6}"
+                            <input type="text" inputmode="numeric" class="form-control" id="CANTIDAD" name="CANTIDAD"
+                                   pattern="[1-9][0-9]{0,5}"
                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);"
-                                   title="Solo se permiten números enteros positivos, máximo 6 dígitos."
+                                   title="Solo números enteros positivos, sin ceros a la izquierda (máx. 6 dígitos)."
                                    value="{{ record_data.get('CANTIDAD', '').split(' ')[0] }}" required {% if is_edit_mode %}disabled{% endif %}>
                             <div class="invalid-feedback">
-                                La cantidad debe ser un número entero positivo (máximo 6 dígitos).
+                                La cantidad debe ser un número entero positivo, sin ceros a la izquierda (máx. 6 dígitos).
                             </div>
                             <select class="form-select" name="UNIDAD_CANTIDAD" style="max-width: 80px;" {% if is_edit_mode %}disabled{% endif %}>
                                 <option {% if 'KG' in record_data.get('CANTIDAD', 'KG') %}selected{% endif %}>KG</option>
@@ -247,7 +250,7 @@
         </div>
     </fieldset>
 
-    {% if not is_finalized %}
+    {% if not is_finalized or session.get('role') == 'Administrador' %}
         <button type="submit" class="btn btn-primary w-100 mb-5">Guardar Cambios</button>
     {% endif %}
 </form>
