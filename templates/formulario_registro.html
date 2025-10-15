@@ -322,9 +322,13 @@
             if (!isEditMode) {
                 versionSelect.disabled = false;
             }
+            // Se restaura el mensaje de error por defecto
+            versionSelect.nextElementSibling.textContent = 'Debe seleccionar una versión para cargar las especificaciones.';
             // --- FIN DE LA CORRECCIÓN ---
         } else {
             versionSelect.innerHTML = '<option value="">Sin especificaciones</option>';
+            // Se actualiza el mensaje de error para ser más claro
+            versionSelect.nextElementSibling.textContent = 'Este producto no tiene especificaciones y no puede ser registrado. Contacte a un supervisor.';
         }
     }
 
@@ -359,13 +363,21 @@
 
     // Script de validación
     document.getElementById('mainForm').addEventListener('submit', function(event) {
+        // --- INICIO DE LA CORRECCIÓN ---
+        // Validación específica para la Versión de Especificación en modo de creación.
+        // Esta validación se ejecuta primero y es crucial.
         let isValid = true;
+        const versionSelect = document.getElementById('VERSION_ESPECIFICACION');
+        if (versionSelect.disabled && !isEditMode) {
+            isValid = false;
+            versionSelect.classList.add('is-invalid');
+        }
+        // --- FIN DE LA CORRECCIÓN ---
+
+        // Se limpian los errores anteriores antes de volver a validar.
         const requiredFields = this.querySelectorAll('[required]');
         requiredFields.forEach(field => {
             field.classList.remove('is-invalid');
-        });
-        requiredFields.forEach(field => {
-            if (field.disabled) { return; }
             if (!field.value || field.value.trim() === '') {
                 isValid = false;
                 field.classList.add('is-invalid');
@@ -408,6 +420,7 @@
         }
         if (!isValid) {
             event.preventDefault();
+            alert('Por favor, corrija los campos marcados en rojo antes de guardar.');
             const firstInvalid = this.querySelector('.is-invalid');
             if (firstInvalid) {
                 firstInvalid.focus();
