@@ -263,13 +263,6 @@ GOOGLE_CLIENT_SECRET='TU_SECRETO_DE_CLIENTE_AQUI'
                 <div class="note">
                     <strong>Búsqueda Dinámica (AJAX):</strong> Para funcionalidades como la búsqueda en tiempo real, el frontend (JavaScript) realiza una solicitud <code class="inline">fetch</code> a la misma ruta, pero con una cabecera especial. El backend en <code class="inline">app.py</code> detecta esta cabecera y, en lugar de renderizar una página completa, devuelve solo los datos necesarios en formato JSON.
                 </div>
-                <h3><i class="fa-solid fa-database"></i>Sincronización con Supabase</h3>
-                <p>La gestión de usuarios (crear, editar, eliminar) se sincroniza entre Google Sheets (fuente principal) y una tabla <code class="inline">usuarios</code> en Supabase. Esto se hace para mantener la consistencia y preparar el sistema para futuras migraciones.</p>
-                <ul>
-                    <li><strong>Creación:</strong> Al añadir un usuario, se inserta en ambas bases de datos.</li>
-                    <li><strong>Actualización:</strong> Al cambiar el rol de un usuario, se actualiza en ambas.</li>
-                    <li><strong>Eliminación:</strong> Al eliminar un usuario, se borra de ambas.</li>
-                </ul>
             </section>
 
             <section id="autenticacion-google">
