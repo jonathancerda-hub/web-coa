@@ -220,7 +220,9 @@ def auth_google():
         session['username'] = user_in_sheet.get('USERNAME') # O puedes usar user_info.get('name')
         session['role'] = user_in_sheet.get('ROL', 'Operario')
         flash('Inicio de sesión con Google exitoso!', 'success')
+        # --- INICIO DE LA CORRECCIÓN: Añadir registro de log ---
         data_manager.log_action(session.get('username'), "Inicio de Sesión (Google)")
+        # --- FIN DE LA CORRECCIÓN ---
         return redirect(url_for('registros'))
 
     except Exception as e:
