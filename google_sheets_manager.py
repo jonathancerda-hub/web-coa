@@ -53,6 +53,7 @@ class GoogleSheetManager:
             # No relanzar la excepción para permitir que la app inicie incluso si Sheets falla.
             self.client = None
             self.spreadsheet = None
+            self.worksheet = None
             # --- FIN DE LA CORRECCIÓN ---
 
         # --- CONEXIÓN A SUPABASE (SOLO PARA LOGS) ---
@@ -205,6 +206,7 @@ class GoogleSheetManager:
         # Se usa get_all_values con value_render_option='FORMATTED_VALUE' para obtener
         # los datos tal como se ven en la hoja (texto), evitando la conversión automática
         # de '0123' a 123. Luego, se construyen los diccionarios manualmente.
+        if not self.worksheet: return []
         all_values = self.worksheet.get_all_values(value_render_option='FORMATTED_VALUE')
         if not all_values or len(all_values) < 2:
             return []
@@ -215,6 +217,7 @@ class GoogleSheetManager:
     def get_next_codigo(self):
         current_year = str(datetime.now().year)
         try:
+            if not self.worksheet: return f"0001-{current_year}"
             all_values = self.worksheet.col_values(1)
             if len(all_values) <= 1: return f"0001-{current_year}"
             last_code = ""
@@ -233,24 +236,41 @@ class GoogleSheetManager:
             return f"0001-{current_year}"
     
     def add_record(self, data):
-        self.worksheet.append_row(data, value_input_option='USER_ENTERED')
+        if self.worksheet:
+            self.worksheet.append_row(data, value_input_option='USER_ENTERED')
+        else:
+            raise Exception("No hay conexión con la hoja de registros (self.worksheet es None)")
     
     def update_record(self, row_index, data):
-        self.worksheet.update(f'A{row_index}', [data], value_input_option='USER_ENTERED')
+        if self.worksheet:
+            self.worksheet.update(f'A{row_index}', [data], value_input_option='USER_ENTERED')
+        else:
+            raise Exception("No hay conexión con la hoja de registros (self.worksheet es None)")
 
     def get_all_users(self):
-        users_sheet = self.spreadsheet.worksheet("Usuarios")
-        return users_sheet.get_all_records()
+        if not self.spreadsheet:
+            print("Error: No hay conexión con Google Sheets. Retornando lista vacía de usuarios.")
+            return []
+        try:
+            users_sheet = self.spreadsheet.worksheet("Usuarios")
+            return users_sheet.get_all_records()
+        except Exception as e:
+            print(f"Error al obtener usuarios: {e}")
+            return []
 
     def find_user(self, username):
-        users_sheet = self.spreadsheet.worksheet("Usuarios")
-        # --- INICIO DE LA CORRECCIÓN ---
-        # Se utiliza find() que es más directo y eficiente para encontrar la celda.
-        # Se busca en la columna 1 (USERNAME) según la estructura de la hoja.
-        cell = users_sheet.find(username, in_column=1)
-        if cell:
-            return dict(zip(users_sheet.row_values(1), users_sheet.row_values(cell.row)))
-        # --- FIN DE LA CORRECCIÓN ---
+        if not self.spreadsheet: return None
+        try:
+            users_sheet = self.spreadsheet.worksheet("Usuarios")
+            # --- INICIO DE LA CORRECCIÓN ---
+            # Se utiliza find() que es más directo y eficiente para encontrar la celda.
+            # Se busca en la columna 1 (USERNAME) según la estructura de la hoja.
+            cell = users_sheet.find(username, in_column=1)
+            if cell:
+                return dict(zip(users_sheet.row_values(1), users_sheet.row_values(cell.row)))
+            # --- FIN DE LA CORRECCIÓN ---
+        except Exception as e:
+            print(f"Error al buscar usuario {username}: {e}")
         return None
 
     def add_user(self, user_data):
@@ -259,6 +279,7 @@ class GoogleSheetManager:
             return False, "El nombre de usuario ya existe."
         
         try:
+            if not self.spreadsheet: return False, "No hay conexión con Google Sheets."
             users_sheet = self.spreadsheet.worksheet("Usuarios")
             # Se añade directamente el registro de 3 columnas [USERNAME, PASSWORD, ROL]
             users_sheet.append_row(user_data, value_input_option='USER_ENTERED')
@@ -268,6 +289,7 @@ class GoogleSheetManager:
             
     def update_user(self, username, new_data):
         try:
+            if not self.spreadsheet: return False, "No hay conexión con Google Sheets."
             users_sheet = self.spreadsheet.worksheet("Usuarios")
             cell = users_sheet.find(username, in_column=1)
             if not cell: return False, "Usuario no encontrado."
@@ -284,6 +306,7 @@ class GoogleSheetManager:
 
     def delete_user(self, username):
         try:
+            if not self.spreadsheet: return False, "No hay conexión con Google Sheets."
             users_sheet = self.spreadsheet.worksheet("Usuarios")
             cell_to_delete = users_sheet.find(username, in_column=1)
             if not cell_to_delete: return False, "Usuario no encontrado para eliminar."
