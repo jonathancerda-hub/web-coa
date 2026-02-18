@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 import sys
 import json
-from supabase import create_client, Client
+# from supabase import create_client, Client # ELIMINADO SUPABASE
 
 def resource_path(relative_path):
     try:
@@ -56,49 +56,25 @@ class GoogleSheetManager:
             self.worksheet = None
             # --- FIN DE LA CORRECCIÓN ---
 
-        # --- CONEXIÓN A SUPABASE (SOLO PARA LOGS) ---
-        try:
-            url: str = os.environ.get("SUPABASE_URL")
-            key: str = os.environ.get("SUPABASE_KEY")
-
-            if url and key:
-                self.supabase: Client = create_client(url, key)
-                print("Conexión con Supabase para logging establecida.")
-            else:
-                self.supabase = None
-                print("Advertencia: No se encontraron credenciales de Supabase. El logging estará desactivado.")
-        except Exception as e:
-            print(f"ERROR CRÍTICO al inicializar cliente de Supabase: {e}")
-            self.supabase = None
+        # --- CONEXIÓN A SUPABASE (DESACTIVADA) ---
+        self.supabase = None
+        print("Conexión con Supabase omitida por solicitud del usuario.")
 
         # --- Carga de datos inicial desde Google Sheets ---
-        # --- INICIO DE LA CORRECCIÓN ---
-        # Solo cargar datos si la conexión con Sheets fue exitosa.
         if self.spreadsheet:
             self.product_data = self._load_product_data()
             self.specs_data = self._load_specs_data()
         else:
             self.product_data, self.specs_data = {}, {}
     
-    # --- MÉTODOS QUE USAN SUPABASE ---
+    # --- MÉTODOS DE LOG (DESACTIVADOS) ---
     def log_action(self, username, action, details=""):
-        if not self.supabase:
-            return
-        try:
-            log_entry = {'usuario': username, 'accion': action, 'detalles': details}
-            self.supabase.table('log_actividad').insert(log_entry).execute()
-        except Exception as e:
-            print(f"Error al registrar en el log de Supabase: {e}")
+        # Supabase desactivado. Los métodos se mantienen para evitar errores en app.py
+        pass
 
     def get_activity_log(self):
-        if not self.supabase:
-            return []
-        try:
-            response = self.supabase.table('log_actividad').select('*').order('timestamp', desc=True).execute()
-            return response.data
-        except Exception as e:
-            print(f"Error al obtener el log de actividad de Supabase: {e}")
-            return []
+        # Supabase desactivado. Retorna lista vacía.
+        return []
 
     # --- MÉTODOS QUE USAN GOOGLE SHEETS ---
     def _load_product_data(self):
