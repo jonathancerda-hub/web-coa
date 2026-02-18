@@ -1,6 +1,7 @@
-from fpdf import FPDF
+﻿from fpdf import FPDF
 import os
 import sys
+from datetime import datetime
 
 def resource_path(relative_path):
     try:
@@ -69,6 +70,16 @@ class AgrovetPDF(FPDF):
         self.cell(0, 5, "Av. Canadá 3792, San Luis, Lima - Perú", 0, 2, 'R')
         self.cell(0, 5, "T: +51 1 2 300 300", 0, 0, 'R')
 
+def format_month_year(date_str):
+    if not date_str: return "N/A"
+    try:
+        # Intentar parsear el formato estándar dd-mm-yyyy
+        dt = datetime.strptime(date_str, '%d-%m-%Y')
+        meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+        return f"{meses[dt.month-1]}-{dt.strftime('%y')}"
+    except (ValueError, TypeError):
+        return date_str
+
 def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
     # (Esta función no necesita cambios, pero se incluye para que el archivo esté completo)
     pdf_class = AgrovetPDF if pdf_class_name == "AgrovetPDF" else PDF
@@ -91,8 +102,10 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
         info_producto_base = {
             "PRODUCTO": str(data.get('PRODUCTO', '')), "PRESENTACIÓN": str(data.get('PRESENTACION', '')),
             "LOTE": str(data.get('LOTE', '')), "FORMA FARMACÉUTICA": str(data.get('FORMA_FARMACEUTICA', '')),
-            "CANTIDAD LOTE": str(data.get('CANTIDAD', '')), "FECHA DE FABRICACIÓN": str(data.get('FECHA_PRODUCCION', '')),
-            "FECHA DE EXPIRACIÓN": str(data.get('FECHA_VENCIMIENTO', '')), "FECHA DE ANÁLISIS": str(data.get('FECHA_ANALISIS', '')),
+            "CANTIDAD LOTE": str(data.get('CANTIDAD', '')), 
+            "FECHA DE FABRICACIÓN": format_month_year(data.get('FECHA_PRODUCCION', '')),
+            "FECHA DE EXPIRACIÓN": format_month_year(data.get('FECHA_VENCIMIENTO', '')), 
+            "FECHA DE ANÁLISIS": str(data.get('FECHA_ANALISIS', '')),
             "FECHA DE EMISIÓN": str(data.get('FECHA_EMISION', ''))
         }
         info_producto = info_producto_base
@@ -116,6 +129,8 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
         table_data = []
         for i in range(1, 21):
             ensayo = str(data.get(f'ENSAYO{i}', ''))
+            if ensayo.startswith('[OCULTO]'):
+                continue
             especificacion = str(data.get(f'ESPECIFICACION{i}', ''))
             resultado = str(data.get(f'RESULTADO{i}', ''))
             if ensayo or especificacion or resultado:
@@ -147,12 +162,15 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
         pdf.ln(5)
         # --- SECCIÓN 4: CONCLUSIÓN Y OBSERVACIONES ---
         if pdf_class_name == "AgrovetPDF":
-            referencia_completa = f"Referencia: {str(data.get('REFERENCIA', 'N/A'))}"
             pdf.set_font("DejaVuSans", '', 10)
-            pdf.multi_cell(0, 6, referencia_completa, 0, 'L')
+            # Solo el texto por defecto solicitado para Agrovet
+            pdf.multi_cell(0, 6, "Referencia Certificado de Análisis Pharmadix", 0, 'L')
         else:
-            pdf.set_font("DejaVuSans", '', 8)
-            pdf.multi_cell(0, 5, "OBSERVACIONES: " + str(data.get('OBSERVACIONES', '')), 0, 'L')
+            # Pharmadix muestra observaciones solo si tienen contenido
+            observaciones = str(data.get('OBSERVACIONES', '')).strip()
+            if observaciones:
+                pdf.set_font("DejaVuSans", '', 8)
+                pdf.multi_cell(0, 5, "OBSERVACIONES: " + observaciones, 0, 'L')
         pdf.ln(3)
         pdf.set_font("DejaVuSans", 'B', 8)
         pdf.cell(30, 5, "CONCLUSIÓN:", 0, 0, 'L')

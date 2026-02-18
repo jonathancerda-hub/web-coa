@@ -14,7 +14,7 @@
         background-position: right calc(0.375em + 0.1875rem) center;
         background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
     }
-    
+
     .form-control.is-invalid {
         border-color: #dc3545;
         padding-right: calc(1.5em + 0.75rem);
@@ -23,7 +23,7 @@
         background-position: right calc(0.375em + 0.1875rem) center;
         background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
     }
-    
+
     .invalid-feedback {
         /* Se oculta por defecto, se mostrará con la clase .was-validated */
         width: 100%;
@@ -39,6 +39,7 @@
         -webkit-appearance: none;
         margin: 0;
     }
+
     /* Para Firefox */
     input[type=number] {
         -moz-appearance: textfield;
@@ -50,54 +51,62 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="mb-0 fw-bold" style="color: #343a40;">
         {% if is_edit_mode %}
-            <i class="bi bi-pencil-square me-2"></i>Editar Certificado (Código: {{ record_data.get('CODIGO') }})
+        <i class="bi bi-pencil-square me-2"></i>Editar Certificado (Código: {{ record_data.get('CODIGO') }})
         {% else %}
-            <i class="bi bi-file-earmark-plus-fill me-2"></i>Nuevo Certificado de Análisis (Código: {{ next_code }})
+        <i class="bi bi-file-earmark-plus-fill me-2"></i>Nuevo Certificado de Análisis (Código: {{ next_code }})
         {% endif %}
     </h1>
     <a href="{{ url_for('registros') }}" class="btn btn-secondary">Volver a la Lista</a>
 </div>
 
-<form method="POST" id="mainForm" class="needs-validation" novalidate action="{% if is_edit_mode %}{{ url_for('editar_registro', codigo=record_data.get('CODIGO')) }}{% else %}{{ url_for('nuevo_registro') }}{% endif %}">
-    <fieldset {% if is_finalized and session.get('role') != 'Administrador' %}disabled{% endif %}>
-        
+<form method="POST" id="mainForm" class="needs-validation" novalidate
+    action="{% if is_edit_mode %}{{ url_for('editar_registro', codigo=record_data.get('CODIGO')) }}{% else %}{{ url_for('nuevo_registro') }}{% endif %}">
+    <fieldset {% if is_finalized and session.get('role') !='Administrador' %}disabled{% endif %}>
+
         <div class="card mb-4">
-            <div class="card-header"><h5>Datos del Producto</h5></div>
+            <div class="card-header">
+                <h5>Datos del Producto</h5>
+            </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="PRODUCTO" class="form-label">Producto</label>
-                        <select class="form-select" id="PRODUCTO" name="PRODUCTO" required {% if is_edit_mode %}disabled{% endif %}>
-                            <option value="" disabled {% if not record_data.get('PRODUCTO') %}selected{% endif %}>Seleccione un producto...</option>
+                        <select class="form-select" id="PRODUCTO" name="PRODUCTO" required {% if is_edit_mode
+                            %}disabled{% endif %}>
+                            <option value="" disabled {% if not record_data.get('PRODUCTO') %}selected{% endif %}>
+                                Seleccione un producto...</option>
                             {% for product in product_list %}
-                            <option value="{{ product }}" {% if product == record_data.get('PRODUCTO') %}selected{% endif %}>{{ product }}</option>
+                            <option value="{{ product }}" {% if product==record_data.get('PRODUCTO') %}selected{% endif
+                                %}>{{ product }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="PRESENTACION" class="form-label">Presentación</label>
-                        <select class="form-select" id="PRESENTACION" name="PRESENTACION" required {% if is_edit_mode %}disabled{% endif %}></select>
+                        <select class="form-select" id="PRESENTACION" name="PRESENTACION" required {% if is_edit_mode
+                            %}disabled{% endif %}></select>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="FORMA_FARMACEUTICA" class="form-label">Forma Farmacéutica</label>
-                        <input type="text" class="form-control" id="FORMA_FARMACEUTICA" name="FORMA_FARMACEUTICA" value="{{ record_data.get('FORMA_FARMACEUTICA', '') }}" readonly required>
+                        <input type="text" class="form-control" id="FORMA_FARMACEUTICA" name="FORMA_FARMACEUTICA"
+                            value="{{ record_data.get('FORMA_FARMACEUTICA', '') }}" readonly required>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="LOTE" class="form-label">Lote</label>
                         <input type="text" inputmode="numeric" class="form-control" id="LOTE" name="LOTE"
-                               pattern="\d{1,12}"
-                               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12);"
-                               title="Solo se permiten números enteros positivos, máximo 12 dígitos."
-                               value="{{ record_data.get('LOTE', '') }}" required {% if is_edit_mode %}disabled{% endif %}>
+                            pattern="\d{1,12}" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12);"
+                            title="Solo se permiten números enteros positivos, máximo 12 dígitos."
+                            value="{{ record_data.get('LOTE', '') }}" required {% if is_edit_mode %}disabled{% endif %}>
                         <div class="invalid-feedback">
                             El lote debe contener solo números (máximo 12 dígitos).
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="VERSION_ESPECIFICACION" class="form-label">Versión de Especificación</label>
-                        <select class="form-select" id="VERSION_ESPECIFICACION" name="VERSION_ESPECIFICACION" required disabled></select>
+                        <select class="form-select" id="VERSION_ESPECIFICACION" name="VERSION_ESPECIFICACION" required
+                            disabled></select>
                         <div class="invalid-feedback">
                             Debe seleccionar una versión para cargar las especificaciones.
                         </div>
@@ -106,16 +115,20 @@
                         <label for="CANTIDAD" class="form-label">Cantidad</label>
                         <div class="input-group">
                             <input type="text" inputmode="numeric" class="form-control" id="CANTIDAD" name="CANTIDAD"
-                                   pattern="[1-9][0-9]{0,5}"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);"
-                                   title="Solo números enteros positivos, sin ceros a la izquierda (máx. 6 dígitos)."
-                                   value="{{ record_data.get('CANTIDAD', '').split(' ')[0] }}" required {% if is_edit_mode %}disabled{% endif %}>
+                                pattern="[1-9][0-9]{0,5}"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);"
+                                title="Solo números enteros positivos, sin ceros a la izquierda (máx. 6 dígitos)."
+                                value="{{ record_data.get('CANTIDAD', '').split(' ')[0] }}" required {% if is_edit_mode
+                                %}disabled{% endif %}>
                             <div class="invalid-feedback">
-                                La cantidad debe ser un número entero positivo, sin ceros a la izquierda (máx. 6 dígitos).
+                                La cantidad debe ser un número entero positivo, sin ceros a la izquierda (máx. 6
+                                dígitos).
                             </div>
-                            <select class="form-select" name="UNIDAD_CANTIDAD" style="max-width: 80px;" {% if is_edit_mode %}disabled{% endif %}>
-                                <option {% if 'KG' in record_data.get('CANTIDAD', 'KG') %}selected{% endif %}>KG</option>
-                                <option {% if 'L' in record_data.get('CANTIDAD', 'L') %}selected{% endif %}>L</option>
+                            <select class="form-select" name="UNIDAD_CANTIDAD" style="max-width: 80px;" {% if
+                                is_edit_mode %}disabled{% endif %}>
+                                <option {% if 'KG' in record_data.get('CANTIDAD', 'KG' ) %}selected{% endif %}>KG
+                                </option>
+                                <option {% if 'L' in record_data.get('CANTIDAD', 'L' ) %}selected{% endif %}>L</option>
                             </select>
                         </div>
                     </div>
@@ -124,58 +137,62 @@
         </div>
 
         <div class="card mb-4">
-            <div class="card-header"><h5>Fechas y Referencia</h5></div>
+            <div class="card-header">
+                <h5>Fechas y Referencia</h5>
+            </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <label>Fecha de Producción</label>
-                        <input type="text" class="form-control datepicker" name="FECHA_PRODUCCION" value="{{ record_data.get('FECHA_PRODUCCION', '') }}" required placeholder="dd-mm-yyyy">
+                        <input type="text" class="form-control datepicker" name="FECHA_PRODUCCION"
+                            value="{{ record_data.get('FECHA_PRODUCCION', '') }}" required placeholder="dd-mm-yyyy">
                         <div class="invalid-feedback">
                             La fecha de producción es obligatoria.
                         </div>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label>Fecha de Vencimiento</label>
-                        <input type="text" class="form-control datepicker" name="FECHA_VENCIMIENTO" 
-                               value="{{ record_data.get('FECHA_VENCIMIENTO', '') }}" 
-                               required 
-                               placeholder="dd-mm-yyyy">
+                        <input type="text" class="form-control datepicker" name="FECHA_VENCIMIENTO"
+                            value="{{ record_data.get('FECHA_VENCIMIENTO', '') }}" required placeholder="dd-mm-yyyy">
                         <div class="invalid-feedback">
                             La fecha de vencimiento es obligatoria y debe ser una fecha futura.
                         </div>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label>Fecha de Análisis</label>
-                        <input type="text" class="form-control datepicker" name="FECHA_ANALISIS" value="{{ record_data.get('FECHA_ANALISIS', '') }}" required placeholder="dd-mm-yyyy">
+                        <input type="text" class="form-control datepicker" name="FECHA_ANALISIS"
+                            value="{{ record_data.get('FECHA_ANALISIS', '') }}" required placeholder="dd-mm-yyyy">
                         <div class="invalid-feedback">
                             La fecha de análisis es obligatoria y no puede ser anterior a hoy.
                         </div>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label>Fecha de Emisión</label>
-                        <input type="text" class="form-control datepicker" name="FECHA_EMISION" value="{{ record_data.get('FECHA_EMISION', '') }}" required placeholder="dd-mm-yyyy">
+                        <input type="text" class="form-control datepicker" name="FECHA_EMISION"
+                            value="{{ record_data.get('FECHA_EMISION', '') }}" required placeholder="dd-mm-yyyy">
                         <div class="invalid-feedback">
                             La fecha de emisión es obligatoria.
                         </div>
                     </div>
                 </div>
-                 <div class="row">
+                <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label>Laboratorio</label>
-                        <input type="text" class="form-control" name="LABORATORIO" 
-                               pattern="[A-Za-z0-9\s\-\.]{1,50}"
-                               title="Solo letras, números, espacios, puntos y guiones. Máximo 50 caracteres"
-                               value="{{ record_data.get('LABORATORIO', 'PHARMADIX') }}" required>
+                        <label>Línea</label>
+                        <select class="form-select" name="LABORATORIO" required>
+                            <option value="AGROVETMARKET" {% if record_data.get('LABORATORIO')=='AGROVETMARKET'
+                                %}selected{% endif %}>AGROVETMARKET</option>
+                            <option value="PHARMADIX" {% if record_data.get('LABORATORIO')=='PHARMADIX' or not
+                                record_data.get('LABORATORIO') %}selected{% endif %}>PHARMADIX</option>
+                        </select>
                         <div class="invalid-feedback">
-                            Formato inválido. Solo letras, números, espacios, puntos y guiones (máx 50).
+                            Seleccione una línea válida.
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>Referencia (Opcional)</label>
-                        <input type="text" class="form-control" name="REFERENCIA" 
-                               pattern="[A-Za-z0-9\s\-\._()]{0,30}"
-                               title="Solo letras, números, espacios y los símbolos: - . _ ( )"
-                               value="{{ record_data.get('REFERENCIA', '') }}">
+                        <input type="text" class="form-control" name="REFERENCIA" pattern="[A-Za-z0-9\s\-\._()]{0,30}"
+                            title="Solo letras, números, espacios y los símbolos: - . _ ( )"
+                            value="{{ record_data.get('REFERENCIA', '') }}">
                         <div class="invalid-feedback">
                             Formato inválido. Solo se permiten letras, números, espacios y los símbolos: - . _ ( )
                         </div>
@@ -185,37 +202,56 @@
         </div>
 
         <div class="card mb-4">
-            <div class="card-header"><h5>Tabla de Análisis</h5></div>
+            <div class="card-header">
+                <h5>Tabla de Análisis</h5>
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table">
-                        <thead><tr><th>Ensayo</th><th>Especificaciones</th><th>Resultados</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;" title="Imprimir en PDF">Impr.</th>
+                                <th>Ensayo</th>
+                                <th>Especificaciones</th>
+                                <th>Resultados</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             {% for i in range(1, 21) %}
+                            {% set ensayo_val = record_data.get('ENSAYO' ~ i, '') %}
+                            {% set is_hidden = ensayo_val.startswith('[OCULTO]') %}
+                            {% if is_hidden %}
+                            {% set display_ensayo = ensayo_val[8:] %}
+                            {% else %}
+                            {% set display_ensayo = ensayo_val %}
+                            {% endif %}
                             <tr>
-                                <td>
-                                    <input type="text" class="form-control" name="ENSAYO{{i}}" 
-                                           pattern="[A-Za-z0-9\s\-\.\(\)%°μ]{0,100}"
-                                           title="Formato de ensayo válido (letras, números, símbolos científicos)"
-                                           value="{{ record_data.get('ENSAYO' ~ i, '') }}">
+                                <td class="text-center align-middle">
+                                    <input type="checkbox" class="form-check-input print-switch" id="PRINT{{i}}" {% if
+                                        not is_hidden %}checked{% endif %} title="Marcar para imprimir en PDF">
                                 </td>
                                 <td>
-                                    <input type="text" class="form-control" name="ESPECIFICACION{{i}}" 
-                                           pattern="[A-Za-z0-9\s\-\.\(\)%<>=±μ/]{0,150}"
-                                           title="Formato de especificación válido"
-                                           value="{{ record_data.get('ESPECIFICACION' ~ i, '') }}">
+                                    <input type="text" class="form-control" name="ENSAYO{{i}}"
+                                        pattern="[A-Za-z0-9\s\-\.\(\)%°μ]{0,100}" title="Formato de ensayo válido"
+                                        value="{{ display_ensayo }}">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" name="ESPECIFICACION{{i}}"
+                                        pattern="[A-Za-z0-9\s\-\.\(\)%<>=±μ/]{0,150}"
+                                        title="Formato de especificación válido"
+                                        value="{{ record_data.get('ESPECIFICACION' ~ i, '') }}">
                                 </td>
                                 <td>
                                     {% if is_edit_mode and session.get('role') in ['Administrador', 'Supervisor'] %}
-                                        <input type="text" class="form-control" name="RESULTADO{{i}}" 
-                                               pattern="[0-9\.\,\-\+\s<>=±μ/]{0,50}"
-                                               title="Solo números, símbolos de comparación y unidades"
-                                               value="{{ record_data.get('RESULTADO' ~ i, '') }}">
+                                    <input type="text" class="form-control" name="RESULTADO{{i}}"
+                                        pattern="[0-9\.\,\-\+\s<>=±μ/]{0,50}"
+                                        title="Solo números, símbolos de comparación y unidades"
+                                        value="{{ record_data.get('RESULTADO' ~ i, '') }}">
                                     {% else %}
-                                        <input type="text" class="form-control" name="RESULTADO{{i}}" 
-                                               pattern="[0-9\.\,\-\+\s<>=±μ/]{0,50}"
-                                               title="Solo números, símbolos de comparación y unidades"
-                                               value="{{ record_data.get('RESULTADO' ~ i, '') }}" readonly>
+                                    <input type="text" class="form-control" name="RESULTADO{{i}}"
+                                        pattern="[0-9\.\,\-\+\s<>=±μ/]{0,50}"
+                                        title="Solo números, símbolos de comparación y unidades"
+                                        value="{{ record_data.get('RESULTADO' ~ i, '') }}" readonly>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -225,25 +261,31 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="card mb-4">
-            <div class="card-header"><h5>Conclusión</h5></div>
+            <div class="card-header">
+                <h5>Conclusión</h5>
+            </div>
             <div class="card-body">
                 <div class="mb-3">
                     <label for="OBSERVACIONES" class="form-label">Observaciones (Opcional)</label>
-                    <textarea class="form-control" id="OBSERVACIONES" name="OBSERVACIONES" rows="3" placeholder="- Observación 1&#10;- Observación 2">{{ record_data.get('OBSERVACIONES', '') }}</textarea>
+                    <textarea class="form-control" id="OBSERVACIONES" name="OBSERVACIONES" rows="3"
+                        placeholder="- Observación 1&#10;- Observación 2">{{ record_data.get('OBSERVACIONES', '') }}</textarea>
                 </div>
                 <div class="mb-3">
                     <label for="CONCLUSION" class="form-label">Conclusión</label>
                     {% if session.get('role') in ['Administrador', 'Supervisor'] %}
-                        <select class="form-select" id="CONCLUSION" name="CONCLUSION">
-                            <option {% if 'PENDIENTE' == record_data.get('CONCLUSION', 'PENDIENTE') %}selected{% endif %}>PENDIENTE</option>
-                            <option {% if 'APROBADO' == record_data.get('CONCLUSION') %}selected{% endif %}>APROBADO</option>
-                            <option {% if 'RECHAZADO' == record_data.get('CONCLUSION') %}selected{% endif %}>RECHAZADO</option>
-                        </select>
+                    <select class="form-select" id="CONCLUSION" name="CONCLUSION">
+                        <option {% if 'PENDIENTE'==record_data.get('CONCLUSION', 'PENDIENTE' ) %}selected{% endif %}>
+                            PENDIENTE</option>
+                        <option {% if 'APROBADO'==record_data.get('CONCLUSION') %}selected{% endif %}>APROBADO</option>
+                        <option {% if 'RECHAZADO'==record_data.get('CONCLUSION') %}selected{% endif %}>RECHAZADO
+                        </option>
+                    </select>
                     {% else %}
-                        <input type="text" class="form-control" value="{{ record_data.get('CONCLUSION', 'PENDIENTE') }}" readonly>
-                        <input type="hidden" name="CONCLUSION" value="{{ record_data.get('CONCLUSION', 'PENDIENTE') }}">
+                    <input type="text" class="form-control" value="{{ record_data.get('CONCLUSION', 'PENDIENTE') }}"
+                        readonly>
+                    <input type="hidden" name="CONCLUSION" value="{{ record_data.get('CONCLUSION', 'PENDIENTE') }}">
                     {% endif %}
                 </div>
             </div>
@@ -251,7 +293,7 @@
     </fieldset>
 
     {% if not is_finalized or session.get('role') == 'Administrador' %}
-        <button type="submit" class="btn btn-primary w-100 mb-5">Guardar Cambios</button>
+    <button type="submit" class="btn btn-primary w-100 mb-5">Guardar Cambios</button>
     {% endif %}
 </form>
 {% endblock %}
@@ -261,10 +303,10 @@
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 
 <script>
-    const productData = {{ product_data_json|safe }};
-    const specsData = {{ specs_data_json|safe }};
-    const isEditMode = {{ is_edit_mode|tojson|safe }};
-    const recordData = {{ record_data|tojson|default('{}')|safe }};
+    const productData = {{ product_data_json| safe }};
+    const specsData = {{ specs_data_json| safe }};
+    const isEditMode = {{ is_edit_mode| tojson | safe }};
+    const recordData = {{ record_data| tojson |default ('{}') | safe }};
 
     const productoSelect = document.getElementById('PRODUCTO');
     const presentacionSelect = document.getElementById('PRESENTACION');
@@ -286,11 +328,11 @@
         versionSelect.disabled = true;
 
         if (!isEditMode || (isEditMode && productoSelect.value !== recordData.PRODUCTO)) {
-             limpiarTablaAnalisis();
+            limpiarTablaAnalisis();
         }
-        
+
         if (data) {
-            data.presentaciones.forEach(function(p) {
+            data.presentaciones.forEach(function (p) {
                 const option = document.createElement('option');
                 option.value = p;
                 option.textContent = p;
@@ -305,11 +347,11 @@
         if (specsData[selectedProduct]) {
             versionSelect.innerHTML = '<option value="">Seleccione una versión...</option>';
             const versiones = Object.keys(specsData[selectedProduct]);
-            versiones.forEach(function(v) {
+            versiones.forEach(function (v) {
                 const option = document.createElement('option');
                 option.value = v;
                 option.textContent = v;
-                
+
                 // --- LÍNEA CORREGIDA ---
                 // Comparamos ambos valores como texto para evitar errores de tipo (ej: 3 vs "3")
                 if (isEditMode && String(v) === String(recordData.VERSION_ESPECIFICACION)) {
@@ -340,7 +382,7 @@
         }
         if (selectedProduct && selectedVersion && specsData[selectedProduct] && specsData[selectedProduct][selectedVersion]) {
             const especificaciones = specsData[selectedProduct][selectedVersion];
-            especificaciones.forEach(function(spec, index) {
+            especificaciones.forEach(function (spec, index) {
                 if (index < 20) {
                     document.querySelector(`[name="ENSAYO${index + 1}"]`).value = spec.especificacion || '';
                     document.querySelector(`[name="ESPECIFICACION${index + 1}"]`).value = spec.descripcion || '';
@@ -362,7 +404,7 @@
     });
 
     // Script de validación
-    document.getElementById('mainForm').addEventListener('submit', function(event) {
+    document.getElementById('mainForm').addEventListener('submit', function (event) {
         // --- INICIO DE LA CORRECCIÓN ---
         // Validación específica para la Versión de Especificación en modo de creación.
         // Esta validación se ejecuta primero y es crucial.
@@ -386,20 +428,21 @@
 
         // Validaciones de fechas mejoradas
         const hoy = new Date();
-        hoy.setHours(0,0,0,0);
+        hoy.setHours(0, 0, 0, 0);
         function parseFecha(str) {
             if (!str) return null;
             str = str.trim();
             const match = str.match(/^(\d{2})-(\d{2})-(\d{4})$/);
             if (!match) return null;
             const [_, d, m, y] = match;
-            return new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+            return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
         }
         const fProd = this.querySelector('[name="FECHA_PRODUCCION"]').value;
         const fVenc = this.querySelector('[name="FECHA_VENCIMIENTO"]').value;
         const fAnal = this.querySelector('[name="FECHA_ANALISIS"]').value;
         const fEmis = this.querySelector('[name="FECHA_EMISION"]').value;
         // Solo aplicar validaciones estrictas de fechas si NO es modo edición
+        /* DESACTIVADO TEMPORALMENTE PARA REGULARIZACIÓN
         if (!isEditMode) {
             // Fecha de Vencimiento: debe ser posterior a hoy (se mantiene)
             if (fVenc) {
@@ -418,6 +461,23 @@
                 }
             }
         }
+        */
+        // Antes de enviar, procesar el prefijo [OCULTO]
+        for (let i = 1; i <= 20; i++) {
+            const printSwitch = document.getElementById(`PRINT${i}`);
+            const ensayoInput = this.querySelector(`[name="ENSAYO${i}"]`);
+            if (ensayoInput && ensayoInput.value.trim() !== '') {
+                // Limpiar cualquier prefijo previo por seguridad
+                if (ensayoInput.value.startsWith('[OCULTO]')) {
+                    ensayoInput.value = ensayoInput.value.substring(8);
+                }
+                // Añadir prefijo si el switch está apagado
+                if (!printSwitch.checked) {
+                    ensayoInput.value = '[OCULTO]' + ensayoInput.value;
+                }
+            }
+        }
+
         if (!isValid) {
             event.preventDefault();
             alert('Por favor, corrija los campos marcados en rojo antes de guardar.');
@@ -427,7 +487,7 @@
             }
         }
     }, true);
-    
+
     // Script para activar los calendarios
     flatpickr.localize(flatpickr.l10ns.es);
     flatpickr(".datepicker", {
@@ -438,7 +498,7 @@
     function addRealTimeValidation() {
         const inputs = document.querySelectorAll('input[pattern]');
         inputs.forEach(input => {
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
                 if (this.value && !this.checkValidity()) {
                     this.classList.add('is-invalid');
                     this.classList.remove('is-valid');
@@ -451,7 +511,7 @@
             });
         });
     }
-    
+
     // Inicializar validación en tiempo real
     addRealTimeValidation();
 </script>

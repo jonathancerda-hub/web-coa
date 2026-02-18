@@ -15,13 +15,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 # --- IMPORTACIÓN CORREGIDA ---
 # Se asegura de importar las funciones necesarias de los otros archivos.
-from pdf_generator import generar_certificado_en_memoria
+from modules.pdf_generator import generar_certificado_en_memoria
 
 # Cargar variables de entorno del archivo .env
 load_dotenv()
 
 # Importar nuestro gestor de datos después de cargar las variables
-from google_sheets_manager import GoogleSheetManager, get_column_order
+from modules.google_sheets_manager import GoogleSheetManager, get_column_order
 
 # Inicializar la App y el Gestor de Datos
 app = Flask(__name__)
