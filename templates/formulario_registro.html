@@ -214,6 +214,7 @@
                                 <th>Ensayo</th>
                                 <th>Especificaciones</th>
                                 <th>Resultados</th>
+                                <th style="width: 150px;">Ref.</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -253,6 +254,12 @@
                                         title="Solo números, símbolos de comparación y unidades"
                                         value="{{ record_data.get('RESULTADO' ~ i, '') }}" readonly>
                                     {% endif %}
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" name="NOTA{{i}}"
+                                        pattern="[A-Za-z0-9\s\-\.\(\)]{0,50}"
+                                        title="Nota corta de referencia (ej: Lab. Externo)"
+                                        value="{{ record_data.get('NOTA' ~ i, '') }}" placeholder="Nota...">
                                 </td>
                             </tr>
                             {% endfor %}

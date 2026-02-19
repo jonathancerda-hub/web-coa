@@ -151,11 +151,19 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
             if e.startswith('[OCULTO]'): continue
             s = str(data.get(f'ESPECIFICACION{i}', '') or '').strip()
             r = str(data.get(f'RESULTADO{i}', '') or '').strip()
+            n = str(data.get(f'NOTA{i}', '') or '').strip()
             
             if e or s or r:
                 e = procesar_texto(e, notas_catalogo, mode=proc_mode)
                 s = procesar_texto(s, notas_catalogo, mode=proc_mode)
                 r = procesar_texto(r, notas_catalogo, mode=proc_mode)
+                
+                # Gestión de la NOTA estructurada
+                if n and proc_mode == "pharmadix":
+                    if n not in notas_catalogo:
+                        notas_catalogo.append(n)
+                    idx = notas_catalogo.index(n) + 1
+                    r += f" ({idx})"
                 
                 # Calcular altura necesaria
                 lines_e = pdf.multi_cell(w1, 5, e, split_only=True)

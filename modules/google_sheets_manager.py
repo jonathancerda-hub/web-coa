@@ -21,7 +21,7 @@ def get_column_order():
             'LABORATORIO','REFERENCIA','FECHA_DE_REGISTRO','CONCLUSION',
             'OBSERVACIONES','CREADO_POR']
     for i in range(1, 21): 
-        cols.extend([f'ENSAYO{i}', f'ESPECIFICACION{i}', f'RESULTADO{i}'])
+        cols.extend([f'ENSAYO{i}', f'ESPECIFICACION{i}', f'RESULTADO{i}', f'NOTA{i}'])
     return cols
 
 class GoogleSheetManager:
