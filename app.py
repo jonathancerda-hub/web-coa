@@ -680,6 +680,18 @@ def editar_registro(codigo):
 
     if request.method == 'POST':
         try:
+            # Debug: Ver qué llega en request.form
+            print("\n" + "="*50)
+            print("DEBUG - request.form completo:")
+            notas_encontradas = []
+            for key in request.form:
+                if key.startswith('NOTA'):
+                    valor = request.form.get(key)
+                    if valor and valor.strip():
+                        notas_encontradas.append(f"{key}={valor}")
+            print(f"Notas en request.form: {notas_encontradas if notas_encontradas else 'NINGUNA'}")
+            print("="*50 + "\n")
+            
             # --- INICIO DE LA MODIFICACIÓN ---
             # 1. Copiamos el registro original para preservar los datos que no se pueden editar.
             datos_actualizados = record_to_edit.copy()
@@ -688,6 +700,15 @@ def editar_registro(codigo):
             # Los campos deshabilitados en el HTML no se enviarán, por lo que los valores originales se mantienen.
             for key in request.form:
                 datos_actualizados[key] = request.form.get(key)
+            
+            # 2b. Asegurar que las NOTAS se guarden correctamente (incluir campos vacíos)
+            for i in range(1, 21):
+                nota_key = f'NOTA{i}'
+                if nota_key in request.form:
+                    datos_actualizados[nota_key] = request.form.get(nota_key, '').strip()
+                elif nota_key not in datos_actualizados:
+                    # Si no viene en el form y no existe, agregar vacío
+                    datos_actualizados[nota_key] = ''
 
             # 3. Re-formateamos las fechas y la cantidad, como antes.
             for key in ['FECHA_PRODUCCION', 'FECHA_VENCIMIENTO', 'FECHA_ANALISIS', 'FECHA_EMISION']:
@@ -702,6 +723,25 @@ def editar_registro(codigo):
             # 4. Creamos la lista final en el orden correcto para la hoja de cálculo.
             lista_ordenada = [datos_actualizados.get(col, '') for col in get_column_order()]
             # --- FIN DE LA MODIFICACIÓN ---
+            
+            # Debug: Imprimir las notas que se van a guardar
+            print("DEBUG - Notas en datos_actualizados:")
+            for i in range(1, 21):
+                nota = datos_actualizados.get(f'NOTA{i}', '')
+                if nota:
+                    print(f"  NOTA{i}: {nota}")
+            
+            # Debug: Ver las notas en lista_ordenada
+            col_order = get_column_order()
+            print("DEBUG - Notas en lista_ordenada:")
+            for i in range(1, 21):
+                nota_key = f'NOTA{i}'
+                if nota_key in col_order:
+                    idx = col_order.index(nota_key)
+                    if idx < len(lista_ordenada) and lista_ordenada[idx]:
+                        print(f"  {nota_key} (pos {idx}): {lista_ordenada[idx]}")
+            print("")
+            
             data_manager.update_record(original_index + 2, lista_ordenada)
             flash('¡Registro actualizado con éxito!', 'success')
             data_manager.log_action(session.get('username'), "Editó Certificado", f"Código: {codigo}")
@@ -716,6 +756,25 @@ def editar_registro(codigo):
             product_data_json=json.dumps(data_manager.product_data),
             specs_data_json=json.dumps(data_manager.specs_data)
         )
+
+@app.cli.command("sync-headers")
+def sync_headers_command():
+    """Sincroniza los encabezados de Google Sheets con las columnas esperadas (incluye NOTA1-NOTA20)."""
+    print("Iniciando sincronización de encabezados...")
+    if not data_manager:
+        print("Error: No se pudo inicializar el gestor de datos.")
+        return
+    
+    try:
+        success = data_manager.sync_headers()
+        if success:
+            print("✅ Sincronización completada exitosamente")
+        else:
+            print("❌ La sincronización falló")
+    except Exception as e:
+        print(f"❌ Error durante la sincronización: {e}")
+        import traceback
+        traceback.print_exc()
 
 @app.cli.command("migrate-passwords")
 def migrate_passwords_command():
@@ -741,6 +800,24 @@ def migrate_passwords_command():
         print(f"¡Migración completada! Se actualizaron {migrated_count} contraseñas.")
     except Exception as e:
         print(f"Ocurrió un error durante la migración: {e}")
+
+@app.route('/sync-headers-now', methods=['POST'])
+def sync_headers_now():
+    """Ruta para sincronizar encabezados desde la interfaz web (solo administradores)"""
+    if 'username' not in session:
+        return jsonify({'success': False, 'message': 'No autorizado'}), 401
+    
+    if session.get('role') != 'Administrador':
+        return jsonify({'success': False, 'message': 'Solo administradores pueden realizar esta acción'}), 403
+    
+    try:
+        success = data_manager.sync_headers()
+        if success:
+            return jsonify({'success': True, 'message': 'Encabezados sincronizados correctamente'})
+        else:
+            return jsonify({'success': False, 'message': 'Error al sincronizar encabezados'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False)

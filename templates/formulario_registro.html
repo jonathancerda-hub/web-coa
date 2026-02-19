@@ -214,7 +214,7 @@
                                 <th>Ensayo</th>
                                 <th>Especificaciones</th>
                                 <th>Resultados</th>
-                                <th style="width: 150px;">Ref.</th>
+                                <th style="width: 180px;" title="Nota de referencia que aparecerá numerada al final del PDF (ej: Laboratorio Externo)">Nota de Ref.</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -256,10 +256,12 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <input type="text" class="form-control" name="NOTA{{i}}"
-                                        pattern="[A-Za-z0-9\s\-\.\(\)]{0,50}"
-                                        title="Nota corta de referencia (ej: Lab. Externo)"
-                                        value="{{ record_data.get('NOTA' ~ i, '') }}" placeholder="Nota...">
+                                    <input type="text" class="form-control form-control-sm" name="NOTA{{i}}"
+                                        pattern="[A-Za-z0-9\s\-\.\(\):,]{0,80}"
+                                        title="Nota de referencia (ej: Laboratorio Externo, Analizado en...)"
+                                        value="{{ record_data.get('NOTA' ~ i, '') }}" 
+                                        placeholder="Ej: Lab. Externo"
+                                        style="font-size: 0.85rem;">
                                 </td>
                             </tr>
                             {% endfor %}

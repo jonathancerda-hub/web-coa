@@ -62,6 +62,11 @@ def format_month_year(date_str):
         return f"{meses[dt.month-1]}-{dt.strftime('%y')}"
     except: return str(date_str)
 
+def to_superscript(num):
+    """Convierte un número a formato superíndice usando caracteres Unicode."""
+    superscripts = str.maketrans('0123456789()', '⁰¹²³⁴⁵⁶⁷⁸⁹⁽⁾')
+    return str(num).translate(superscripts)
+
 def procesar_texto(text, catalog, mode="pharmadix"):
     if not text: return ""
     text_str = str(text)
@@ -88,8 +93,10 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
         try:
             pdf.add_font('DejaVu', '', resource_path('fonts/DejaVuSansCondensed.ttf'))
             pdf.add_font('DejaVu', 'B', resource_path('fonts/DejaVuSansCondensed-Bold.ttf'))
+            pdf.add_font('DejaVu', 'I', resource_path('fonts/DejaVuSansCondensed-Oblique.ttf'))
             f_family = 'DejaVu'
-        except:
+        except Exception as e:
+            print(f"Advertencia: No se pudo cargar DejaVu, usando helvetica. Error: {e}")
             f_family = 'helvetica'
         
         pdf.set_font(f_family, '', 8)
@@ -99,6 +106,13 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
         notas_catalogo = []
         is_agrovet = (pdf_class_name == "AgrovetPDF")
         proc_mode = "agrovet" if is_agrovet else "pharmadix"
+        
+        # Debug: Imprimir las notas recibidas en data
+        print(f"DEBUG PDF - Modo: {proc_mode}")
+        for i in range(1, 21):
+            nota = data.get(f'NOTA{i}', '')
+            if nota:
+                print(f"  NOTA{i} recibida: {nota}")
 
         # --- SEGUNDA SECCIÓN: TÍTULO ---
         pdf.set_font(f_family, 'B', 10)
@@ -146,6 +160,8 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
         
         pdf.set_font(f_family, '', 7)
         x_start = pdf.get_x()
+        y_table_start = pdf.get_y()  # Guardar inicio de tabla para bordes verticales
+        
         for i in range(1, 21):
             e = str(data.get(f'ENSAYO{i}', '') or '').strip()
             if e.startswith('[OCULTO]'): continue
@@ -162,54 +178,94 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
                 if n and proc_mode == "pharmadix":
                     if n not in notas_catalogo:
                         notas_catalogo.append(n)
+                        print(f"  DEBUG: Nota agregada al catálogo: {n}")
                     idx = notas_catalogo.index(n) + 1
-                    r += f" ({idx})"
+                    r += f" {to_superscript(f'({idx})')}"
+                    print(f"  DEBUG: Resultado con nota: {r}")
                 
-                # Calcular altura necesaria
-                lines_e = pdf.multi_cell(w1, 5, e, split_only=True)
-                lines_s = pdf.multi_cell(w2, 5, s, split_only=True)
-                lines_r = pdf.multi_cell(w3, 5, r, split_only=True)
-                row_h = max(len(lines_e), len(lines_s), len(lines_r), 1) * 5
+                # Calcular altura necesaria (usar mismo valor para calcular y renderizar)
+                line_height = 4.5  # Altura de línea consistente
+                lines_e = pdf.multi_cell(w1, line_height, e, split_only=True)
+                lines_s = pdf.multi_cell(w2, line_height, s, split_only=True)
+                lines_r = pdf.multi_cell(w3, line_height, r, split_only=True)
+                max_lines = max(len(lines_e), len(lines_s), len(lines_r), 1)
+                row_h = max_lines * line_height
                 
                 if pdf.get_y() + row_h > pdf.page_break_trigger:
                     # Cerrar tabla antes de saltar
                     pdf.line(x_start, pdf.get_y(), x_start + w1 + w2 + w3, pdf.get_y())
                     pdf.add_page()
-                    # Re-dibujar cabecera si es necesario (opcional)
+                    y_table_start = pdf.get_y()
                 
                 curr_y = pdf.get_y()
-                curr_x = pdf.get_x()
                 
-                # Renderizado con bordes Laterales únicamente ('LR') para evitar líneas internas
-                pdf.multi_cell(w1, 5, e, border='LR', align='L', new_x='RIGHT', new_y='TOP')
-                pdf.multi_cell(w2, 5, s, border='LR', align='L', new_x='RIGHT', new_y='TOP')
-                pdf.multi_cell(w3, 5, r, border='LR', align='C', new_x='LEFT', new_y='NEXT')
+                # Renderizado: cada celda sin bordes
+                pdf.set_xy(x_start, curr_y)
+                pdf.multi_cell(w1, line_height, e, border=0, align='L', new_x='RIGHT', new_y='TOP', max_line_height=line_height)
+                pdf.set_xy(x_start + w1, curr_y)
+                pdf.multi_cell(w2, line_height, s, border=0, align='L', new_x='RIGHT', new_y='TOP', max_line_height=line_height)
+                pdf.set_xy(x_start + w1 + w2, curr_y)
+                pdf.multi_cell(w3, line_height, r, border=0, align='C', new_x='RIGHT', new_y='TOP', max_line_height=line_height)
                 
                 pdf.set_y(curr_y + row_h)
 
-        # Línea final de la tabla
+        # Dibujar bordes de la tabla (solo exteriores y líneas verticales)
+        y_table_end = pdf.get_y()
+        table_height = y_table_end - y_table_start
+        
+        # Bordes verticales (izquierda, entre columnas, derecha)
+        pdf.line(x_start, y_table_start, x_start, y_table_end)  # Izquierda
+        pdf.line(x_start + w1, y_table_start, x_start + w1, y_table_end)  # Entre col 1 y 2
+        pdf.line(x_start + w1 + w2, y_table_start, x_start + w1 + w2, y_table_end)  # Entre col 2 y 3
+        pdf.line(x_start + w1 + w2 + w3, y_table_start, x_start + w1 + w2 + w3, y_table_end)  # Derecha
+        
+        # Línea inferior horizontal
         pdf.line(x_start, pdf.get_y(), x_start + w1 + w2 + w3, pdf.get_y())
-        pdf.ln(5)
 
         # --- FOOTER CONTENT ---
-        content_obs = []
         m_obs = str(data.get('OBSERVACIONES', '') or '').strip()
-        if m_obs: content_obs.append(m_obs)
-        if not is_agrovet and notas_catalogo:
-            for idx, n in enumerate(notas_catalogo):
-                content_obs.append(f"({idx+1}) {n.upper()}")
+        
+        print(f"DEBUG PDF - Observaciones: '{m_obs}'")
+        print(f"DEBUG PDF - Catálogo de notas ({len(notas_catalogo)} notas): {notas_catalogo}")
 
         if is_agrovet:
+            pdf.ln(5)
             pdf.set_font(f_family, '', 10)
             pdf.multi_cell(0, 6, "Referencia Certificado de Análisis Pharmadix", 0, 'L')
-        elif content_obs:
-            pdf.set_font(f_family, 'B', 8)
-            pdf.cell(0, 5, "OBSERVACIONES:", 0, 1, 'L')
-            pdf.set_font(f_family, '', 8)
-            for item in content_obs:
-                pdf.multi_cell(0, 5, item, 0, 'L')
+        else:
+            # Sección de Observaciones Manuales y Notas
+            if m_obs or notas_catalogo:
+                pdf.ln(5)
+                
+                # Observaciones manuales del formulario
+                if m_obs:
+                    pdf.set_font(f_family, '', 8)
+                    pdf.set_x(15)  # Asegurar posición inicial correcta
+                    # Convertir referencias (1), (2), etc. a superíndice
+                    m_obs_formatted = re.sub(r'\((\d+)\)', lambda m: to_superscript(f'({m.group(1)})'), m_obs)
+                    pdf.multi_cell(0, 5, m_obs_formatted, 0, 'L')
+                    if notas_catalogo:
+                        pdf.ln(2)  # Espacio entre observaciones y notas
+                
+                # Catálogo de notas de referencia (con formato más elegante)
+                if notas_catalogo:
+                    try:
+                        pdf.set_font(f_family, 'I', 7)  # Fuente más pequeña y en cursiva
+                    except:
+                        pdf.set_font(f_family, '', 7)  # Si falla cursiva, usar normal
+                    pdf.set_text_color(80, 80, 80)  # Gris oscuro para distinguir
+                    for idx, n in enumerate(notas_catalogo):
+                        pdf.set_x(15)  # Asegurar posición inicial correcta
+                        # Usar cell con números en superíndice
+                        pdf.cell(0, 5, f"{to_superscript(f'({idx+1})')} {n.upper()}", 0, 1, 'L')
+                    pdf.set_text_color(0, 0, 0)  # Restaurar color negro
         
-        pdf.ln(3)
+        # Espaciado antes de la conclusión (solo si hubo observaciones/notas o es Agrovet)
+        if is_agrovet or m_obs or notas_catalogo:
+            pdf.ln(4)
+        else:
+            pdf.ln(6)  # Espacio ligeramente mayor si no hay observaciones
+        
         pdf.set_font(f_family, 'B', 8)
         pdf.cell(30, 5, "CONCLUSIÓN:", 0, 0, 'L')
         pdf.set_font(f_family, '', 8)

@@ -21,7 +21,18 @@ def get_column_order():
             'LABORATORIO','REFERENCIA','FECHA_DE_REGISTRO','CONCLUSION',
             'OBSERVACIONES','CREADO_POR']
     for i in range(1, 21): 
-        cols.extend([f'ENSAYO{i}', f'ESPECIFICACION{i}', f'RESULTADO{i}', f'NOTA{i}'])
+        cols.extend([f'ENSAYO{i}', f'ESPECIFICACION{i}', f'RESULTADO{i}'])
+    for i in range(1, 21):
+        cols.append(f'NOTA{i}')
+    
+    # Debug: Imprimir posición de las NOTAS
+    if False:  # Cambiar a True para debug
+        print("DEBUG - Posiciones de columnas NOTA:")
+        for i in range(1, 21):
+            nota_key = f'NOTA{i}'
+            if nota_key in cols:
+                print(f"  {nota_key}: posición {cols.index(nota_key)}")
+    
     return cols
 
 class GoogleSheetManager:
@@ -199,8 +210,52 @@ class GoogleSheetManager:
         if not all_values or len(all_values) < 2:
             return []
         headers = all_values[0]
-        records = [dict(zip(headers, row)) for row in all_values[1:]]
+        
+        # Debug: Verificar si faltan columnas NOTA en los encabezados
+        expected_headers = get_column_order()
+        missing_headers = [h for h in expected_headers if h not in headers]
+        if missing_headers:
+            print(f"ADVERTENCIA: Faltan {len(missing_headers)} columnas en Google Sheets headers")
+            if any('NOTA' in h for h in missing_headers):
+                print("  ⚠️  Faltan columnas NOTA. Ejecuta sync_headers() para sincronizar.")
+        
+        # Construir registros con todas las columnas esperadas
+        records = []
+        for row in all_values[1:]:
+            # Extender row si es más corta que headers
+            row_extended = list(row) + [''] * (len(headers) - len(row))
+            record = dict(zip(headers, row_extended))
+            
+            # Agregar columnas faltantes con valores vacíos
+            for expected_col in expected_headers:
+                if expected_col not in record:
+                    record[expected_col] = ''
+            
+            records.append(record)
+        
         return records
+    
+    def sync_headers(self):
+        """Sincroniza los encabezados de Google Sheets con las columnas esperadas"""
+        if not self.worksheet:
+            print("ERROR: No hay conexión con Google Sheets")
+            return False
+        
+        try:
+            expected_headers = get_column_order()
+            current_headers = self.worksheet.row_values(1)
+            
+            if len(current_headers) < len(expected_headers):
+                print(f"Actualizando encabezados: {len(current_headers)} -> {len(expected_headers)} columnas")
+                self.worksheet.update('A1', [expected_headers], value_input_option='USER_ENTERED')
+                print("✅ Encabezados sincronizados correctamente")
+                return True
+            else:
+                print("✓ Los encabezados ya están actualizados")
+                return True
+        except Exception as e:
+            print(f"ERROR al sincronizar encabezados: {e}")
+            return False
     
     def get_next_codigo(self):
         current_year = str(datetime.now().year)
