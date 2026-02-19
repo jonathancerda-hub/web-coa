@@ -60,12 +60,31 @@ class GoogleSheetManager:
         self.supabase = None
         print("Conexión con Supabase omitida por solicitud del usuario.")
 
-        # --- Carga de datos inicial desde Google Sheets ---
-        if self.spreadsheet:
-            self.product_data = self._load_product_data()
-            self.specs_data = self._load_specs_data()
-        else:
-            self.product_data, self.specs_data = {}, {}
+        # --- Carga de datos inicial (Lazy) ---
+        self._product_data = None
+        self._specs_data = None
+        # Quitamos la carga automática de __init__ para acelerar el arranque en Render
+
+    @property
+    def product_data(self):
+        self._ensure_data_loaded()
+        return self._product_data
+
+    @property
+    def specs_data(self):
+        self._ensure_data_loaded()
+        return self._specs_data
+    
+    def _ensure_data_loaded(self):
+        """Asegura que los datos estén cargados antes de ser usados."""
+        if self.spreadsheet and (self._product_data is None or self._specs_data is None):
+            print("Cargando datos de Google Sheets (Lazy Load)...")
+            try:
+                self._product_data = self._load_product_data()
+                self._specs_data = self._load_specs_data()
+            except Exception as e:
+                print(f"Error en Lazy Load: {e}")
+                self._product_data, self._specs_data = {}, {}
     
     # --- MÉTODOS DE LOG (DESACTIVADOS) ---
     def log_action(self, username, action, details=""):
@@ -122,9 +141,6 @@ class GoogleSheetManager:
             raise
 
     def get_all_products_flat(self):
-        # --- INICIO DE LA MODIFICACIÓN: Optimización de carga ---
-        # En lugar de hacer una nueva llamada a la API, transformamos los datos cacheados.
-        # Esto hace que la carga de la página sea instantánea.
         flat_list = []
         for product_name, data in self.product_data.items():
             for presentation in data.get('presentaciones', []):
@@ -136,10 +152,6 @@ class GoogleSheetManager:
         return flat_list
 
     def get_unique_presentations(self):
-        """
-        Obtiene una lista única y ordenada de todas las presentaciones de todos los productos.
-        Utiliza los datos cacheados en self.product_data para ser eficiente.
-        """
         all_presentations = set()
         if not self.product_data:
             return []
