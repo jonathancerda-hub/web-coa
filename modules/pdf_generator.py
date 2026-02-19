@@ -54,13 +54,85 @@ class AgrovetPDF(FPDF):
         self.cell(0, 5, "Av. Canadá 3792, San Luis, Lima - Perú", 0, 2, 'R')
         self.cell(0, 5, "T: +51 1 2 300 300", 0, 0, 'R')
 
-def format_month_year(date_str):
+class AgrovetEnglishPDF(FPDF):
+    def header(self):
+        try:
+            self.image(resource_path("static/image/agrovet_logo.png"), x=160, y=10, w=30)
+        except:
+            self.set_font("helvetica", 'B', 14)
+            self.set_xy(160, 10)
+            self.cell(0, 10, 'AGROVET MARKET', 0, 0, 'R')
+        self.set_y(30)
+        self.line(10, self.get_y(), 200, self.get_y())
+        self.set_y(self.get_y() + 0.5)
+        self.line(10, self.get_y(), 200, self.get_y())
+        self.ln(5)
+
+    def footer(self):
+        self.set_y(-20)
+        self.set_font('helvetica', 'I', 8)
+        self.set_text_color(128)
+        self.line(10, self.get_y(), 200, self.get_y())
+        self.ln(2)
+        self.cell(0, 5, "Av. Canada 3792, San Luis, Lima - Peru", 0, 2, 'R')
+        self.cell(0, 5, "T: +51 1 2 300 300", 0, 0, 'R')
+
+def format_month_year(date_str, lang='es'):
     if not date_str: return "N/A"
     try:
         dt = datetime.strptime(date_str, '%d-%m-%Y')
-        meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+        if lang == 'en':
+            meses = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        else:
+            meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
         return f"{meses[dt.month-1]}-{dt.strftime('%y')}"
     except: return str(date_str)
+
+# Diccionario de traducciones
+TRANSLATIONS = {
+    'es': {
+        'TITULO_DEPARTAMENTO': 'DEPARTAMENTO DE CONTROL DE CALIDAD',
+        'TITULO_CERTIFICADO': 'CERTIFICADO DE ANÁLISIS N°',
+        'PRODUCTO': 'PRODUCTO',
+        'PRESENTACION': 'PRESENTACIÓN',
+        'LOTE': 'LOTE',
+        'FORMA_FARMACEUTICA': 'FORMA FARMACÉUTICA',
+        'CANTIDAD_LOTE': 'CANTIDAD LOTE',
+        'FECHA_FABRICACION': 'FECHA DE FABRICACIÓN',
+        'FECHA_EXPIRACION': 'FECHA DE EXPIRACIÓN',
+        'FECHA_ANALISIS': 'FECHA DE ANÁLISIS',
+        'FECHA_EMISION': 'FECHA DE EMISIÓN',
+        'LINEA': 'LINEA',
+        'REFERENCIA': 'REFERENCIA',
+        'ENSAYOS': 'ENSAYOS',
+        'ESPECIFICACIONES': 'ESPECIFICACIONES',
+        'RESULTADOS': 'RESULTADOS',
+        'CONCLUSION': 'CONCLUSIÓN',
+        'REFERENCIA_PHARMADIX': 'Referencia Certificado de Análisis Pharmadix',
+        'PENDIENTE': 'PENDIENTE'
+    },
+    'en': {
+        'TITULO_DEPARTAMENTO': 'QUALITY CONTROL DEPARTMENT',
+        'TITULO_CERTIFICADO': 'CERTIFICATE OF ANALYSIS No.',
+        'PRODUCTO': 'PRODUCT',
+        'PRESENTACION': 'PRESENTATION',
+        'LOTE': 'BATCH',
+        'FORMA_FARMACEUTICA': 'PHARMACEUTICAL FORM',
+        'CANTIDAD_LOTE': 'BATCH QUANTITY',
+        'FECHA_FABRICACION': 'MANUFACTURING DATE',
+        'FECHA_EXPIRACION': 'EXPIRATION DATE',
+        'FECHA_ANALISIS': 'ANALYSIS DATE',
+        'FECHA_EMISION': 'ISSUE DATE',
+        'LINEA': 'LINE',
+        'REFERENCIA': 'REFERENCE',
+        'ENSAYOS': 'TESTS',
+        'ESPECIFICACIONES': 'SPECIFICATIONS',
+        'RESULTADOS': 'RESULTS',
+        'CONCLUSION': 'CONCLUSION',
+        'REFERENCIA_PHARMADIX': 'Pharmadix Certificate of Analysis Reference',
+        'PENDIENTE': 'PENDING'
+    }
+}
 
 def to_superscript(num):
     """Convierte un número a formato superíndice usando caracteres Unicode."""
@@ -84,7 +156,19 @@ def procesar_texto(text, catalog, mode="pharmadix"):
     return re.sub(r'\[N:\s*(.*?)\s*\]', repl, text_str)
 
 def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
-    pdf_class = AgrovetPDF if pdf_class_name == "AgrovetPDF" else PDF
+    # Determinar clase de PDF e idioma
+    if pdf_class_name == "AgrovetPDF":
+        pdf_class = AgrovetPDF
+        lang = 'es'
+    elif pdf_class_name == "AgrovetEnglishPDF":
+        pdf_class = AgrovetEnglishPDF
+        lang = 'en'
+    else:
+        pdf_class = PDF
+        lang = 'es'
+    
+    t = TRANSLATIONS[lang]  # Diccionario de traducciones
+    
     try:
         pdf = pdf_class(orientation='P', unit='mm', format='A4')
         pdf.set_margins(15, 15, 15)
@@ -104,7 +188,7 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
         pdf.set_auto_page_break(auto=True, margin=20)
 
         notas_catalogo = []
-        is_agrovet = (pdf_class_name == "AgrovetPDF")
+        is_agrovet = (pdf_class_name in ["AgrovetPDF", "AgrovetEnglishPDF"])
         proc_mode = "agrovet" if is_agrovet else "pharmadix"
         
         # Debug: Imprimir las notas recibidas en data
@@ -116,24 +200,24 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
 
         # --- SEGUNDA SECCIÓN: TÍTULO ---
         pdf.set_font(f_family, 'B', 10)
-        pdf.cell(0, 6, 'DEPARTAMENTO DE CONTROL DE CALIDAD', 0, 1, 'C')
-        pdf.cell(0, 8, f"CERTIFICADO DE ANÁLISIS N° {data.get('CODIGO', 'N/A')}", 0, 1, 'C')
+        pdf.cell(0, 6, t['TITULO_DEPARTAMENTO'], 0, 1, 'C')
+        pdf.cell(0, 8, f"{t['TITULO_CERTIFICADO']} {data.get('CODIGO', 'N/A')}", 0, 1, 'C')
         pdf.ln(3)
 
         # --- DATOS PRODUCTO ---
         info_keys = [
-            ("PRODUCTO", 'PRODUCTO'), ("PRESENTACIÓN", 'PRESENTACION'),
-            ("LOTE", 'LOTE'), ("FORMA FARMACÉUTICA", 'FORMA_FARMACEUTICA'),
-            ("CANTIDAD LOTE", 'CANTIDAD'), 
-            ("FECHA DE FABRICACIÓN", 'FECHA_PRODUCCION'),
-            ("FECHA DE EXPIRACIÓN", 'FECHA_VENCIMIENTO'), 
-            ("FECHA DE ANÁLISIS", 'FECHA_ANALISIS'),
-            ("FECHA DE EMISIÓN", 'FECHA_EMISION')
+            (t['PRODUCTO'], 'PRODUCTO'), (t['PRESENTACION'], 'PRESENTACION'),
+            (t['LOTE'], 'LOTE'), (t['FORMA_FARMACEUTICA'], 'FORMA_FARMACEUTICA'),
+            (t['CANTIDAD_LOTE'], 'CANTIDAD'), 
+            (t['FECHA_FABRICACION'], 'FECHA_PRODUCCION'),
+            (t['FECHA_EXPIRACION'], 'FECHA_VENCIMIENTO'), 
+            (t['FECHA_ANALISIS'], 'FECHA_ANALISIS'),
+            (t['FECHA_EMISION'], 'FECHA_EMISION')
         ]
         
         for label, key in info_keys:
             val = data.get(key, '')
-            if key in ['FECHA_PRODUCCION', 'FECHA_VENCIMIENTO']: val = format_month_year(val)
+            if key in ['FECHA_PRODUCCION', 'FECHA_VENCIMIENTO']: val = format_month_year(val, lang)
             pdf.set_font(f_family, 'B', 8)
             pdf.cell(50, 5, label, 0, 0, 'L')
             pdf.set_font(f_family, '', 8)
@@ -142,11 +226,11 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
             
         if not is_agrovet:
             pdf.set_font(f_family, 'B', 8)
-            pdf.cell(50, 5, "LINEA", 0, 0, 'L')
+            pdf.cell(50, 5, t['LINEA'], 0, 0, 'L')
             pdf.set_font(f_family, '', 8)
             pdf.cell(0, 5, f": {data.get('LABORATORIO', '')}", 0, 1, 'L')
             pdf.set_font(f_family, 'B', 8)
-            pdf.cell(50, 5, "REFERENCIA", 0, 0, 'L')
+            pdf.cell(50, 5, t['REFERENCIA'], 0, 0, 'L')
             pdf.set_font(f_family, '', 8)
             pdf.cell(0, 5, f": {data.get('REFERENCIA', '')}", 0, 1, 'L')
         pdf.ln(4)
@@ -154,9 +238,9 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
         # --- TABLA DE ANÁLISIS ---
         w1, w2, w3 = 55, 80, 45 
         pdf.set_font(f_family, 'B', 9)
-        pdf.cell(w1, 7, 'ENSAYOS', 1, 0, 'C')
-        pdf.cell(w2, 7, 'ESPECIFICACIONES', 1, 0, 'C')
-        pdf.cell(w3, 7, 'RESULTADOS', 1, 1, 'C')
+        pdf.cell(w1, 7, t['ENSAYOS'], 1, 0, 'C')
+        pdf.cell(w2, 7, t['ESPECIFICACIONES'], 1, 0, 'C')
+        pdf.cell(w3, 7, t['RESULTADOS'], 1, 1, 'C')
         
         pdf.set_font(f_family, '', 7)
         x_start = pdf.get_x()
@@ -231,7 +315,7 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
         if is_agrovet:
             pdf.ln(5)
             pdf.set_font(f_family, '', 10)
-            pdf.multi_cell(0, 6, "Referencia Certificado de Análisis Pharmadix", 0, 'L')
+            pdf.multi_cell(0, 6, t['REFERENCIA_PHARMADIX'], 0, 'L')
         else:
             # Sección de Observaciones Manuales y Notas
             if m_obs or notas_catalogo:
@@ -267,9 +351,14 @@ def generar_certificado_en_memoria(data, pdf_class_name="PDF"):
             pdf.ln(6)  # Espacio ligeramente mayor si no hay observaciones
         
         pdf.set_font(f_family, 'B', 8)
-        pdf.cell(30, 5, "CONCLUSIÓN:", 0, 0, 'L')
+        pdf.cell(30, 5, f"{t['CONCLUSION']}:", 0, 0, 'L')
         pdf.set_font(f_family, '', 8)
-        pdf.cell(0, 5, str(data.get('CONCLUSION', 'PENDIENTE')), 0, 1, 'L')
+        conclusion_val = str(data.get('CONCLUSION', t['PENDIENTE']))
+        # Traducir conclusión si es necesario
+        if lang == 'en':
+            conclusion_translations = {'APROBADO': 'APPROVED', 'RECHAZADO': 'REJECTED', 'PENDIENTE': 'PENDING'}
+            conclusion_val = conclusion_translations.get(conclusion_val, conclusion_val)
+        pdf.cell(0, 5, conclusion_val, 0, 1, 'L')
         
         return bytes(pdf.output())
     except Exception as e:

@@ -17,8 +17,9 @@
         <td class="text-center">
             <div class="btn-group" role="group">
                 <a href="{{ url_for('editar_registro', codigo=record.get('CODIGO')) }}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a>
-                <a href="{{ url_for('generate_pdf', codigo=record.get('CODIGO'), pdf_type='PDF') }}" class="btn btn-sm btn-outline-danger" title="PDF" target="_blank"><i class="bi bi-file-earmark-pdf"></i></a>
-                <a href="{{ url_for('generate_pdf', codigo=record.get('CODIGO'), pdf_type='AgrovetPDF') }}" class="btn btn-sm btn-outline-info" title="PDF Agrovet" target="_blank"><i class="bi bi-file-earmark-pdf-fill"></i></a>
+                <a href="{{ url_for('generate_pdf', codigo=record.get('CODIGO'), pdf_type='PDF') }}" class="btn btn-sm btn-outline-danger" title="PDF Pharmadix" target="_blank"><i class="bi bi-file-earmark-pdf"></i></a>
+                <a href="{{ url_for('generate_pdf', codigo=record.get('CODIGO'), pdf_type='AgrovetPDF') }}" class="btn btn-sm btn-outline-info" title="PDF Agrovet (ES)" target="_blank"><i class="bi bi-file-earmark-pdf-fill"></i></a>
+                <a href="{{ url_for('generate_pdf', codigo=record.get('CODIGO'), pdf_type='AgrovetEnglishPDF') }}" class="btn btn-sm btn-outline-success" title="PDF Agrovet (EN)" target="_blank"><i class="bi bi-translate"></i></a>
             </div>
         </td>
     </tr>
