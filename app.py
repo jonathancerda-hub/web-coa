@@ -819,5 +819,19 @@ def sync_headers_now():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
+# --- INICIO: Arranque compatible con Render ---
+# Para Render, descomenta este bloque y comenta el de abajo
+# import os
+# if __name__ == '__main__':
+#     port = int(os.environ.get('PORT', 10000))
+#     app.run(host='0.0.0.0', port=port)
+# --- FIN: Arranque compatible con Render ---
+
+import os
+
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)
+    port = int(os.environ.get('PORT', 0))
+    if port:
+        app.run(host='0.0.0.0', port=port)
+    else:
+        app.run(debug=True, use_reloader=False)
