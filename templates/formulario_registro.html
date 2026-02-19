@@ -49,13 +49,13 @@
 {% set is_finalized = is_edit_mode and record_data.get('CONCLUSION') in ['APROBADO', 'RECHAZADO'] %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-0 fw-bold" style="color: #343a40;">
+    <h3 class="mb-0 fw-semibold" style="color: #343a40; font-size: 1.6rem;">
         {% if is_edit_mode %}
         <i class="bi bi-pencil-square me-2"></i>Editar Certificado (Código: {{ record_data.get('CODIGO') }})
         {% else %}
         <i class="bi bi-file-earmark-plus-fill me-2"></i>Nuevo Certificado de Análisis (Código: {{ next_code }})
         {% endif %}
-    </h1>
+    </h3>
     <a href="{{ url_for('registros') }}" class="btn btn-secondary">Volver a la Lista</a>
 </div>
 
@@ -257,7 +257,7 @@
                                 </td>
                                 <td>
                                     <input type="text" class="form-control form-control-sm" name="NOTA{{i}}"
-                                        pattern="[A-Za-z0-9\s\-\.\(\):,]{0,80}"
+                                        pattern=".{0,80}"
                                         title="Nota de referencia (ej: Laboratorio Externo, Analizado en...)"
                                         value="{{ record_data.get('NOTA' ~ i, '') }}" 
                                         placeholder="Ej: Lab. Externo"
